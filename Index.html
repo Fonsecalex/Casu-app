@@ -1,0 +1,1121 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Casu — Cuidado que não falha</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<!-- Ícones são SVGs embutidos no próprio arquivo (ver ICONS no script) — zero dependência externa -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: {
+          display: ['Fraunces', 'serif'],
+          sans: ['Inter', 'sans-serif'],
+        },
+        colors: {
+          cream: '#FDFBF7',
+          sand: '#F4ECE0',
+          rose: {
+            50: '#FDF3F4', 100: '#FAE3E5', 200: '#F5CBCF', 300: '#EFA9B0',
+            400: '#E8929B', 500: '#DE7885', 600: '#C65D6C', 700: '#A54453',
+          },
+          sky: {
+            50: '#F1F8FB', 100: '#DFEFF5', 200: '#C4E1EC', 300: '#9FCCDF',
+            400: '#79B4CE', 500: '#5A9BBA', 600: '#457E9A',
+          },
+          ink: '#3B3438',
+          sage: { 100: '#E8EEE2', 400: '#8FAE7C', 600: '#5E7E4D' },
+          amber: { 100: '#FAEFDA', 400: '#E4B65C', 600: '#B9862A' },
+        },
+        boxShadow: {
+          soft: '0 2px 20px -4px rgba(59,52,56,0.08)',
+          card: '0 4px 24px -6px rgba(59,52,56,0.10)',
+        },
+        borderRadius: { '2xl': '1.25rem', '3xl': '1.75rem' }
+      }
+    }
+  }
+</script>
+<style>
+  html { scroll-behavior: smooth; }
+  body { font-family: 'Inter', sans-serif; background: #FDFBF7; }
+  .font-display { font-family: 'Fraunces', serif; }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-thumb { background: #F5CBCF; border-radius: 8px; }
+  .ring-progress { transition: background 0.6s ease; }
+  .nav-active { color: #A54453; background: #FAE3E5; }
+  .chip-active { background: #3B3438; color: #FDFBF7; }
+  .view { animation: fadeIn 0.35s ease; }
+  @keyframes fadeIn { from { opacity:0; transform: translateY(6px);} to {opacity:1; transform: translateY(0);} }
+  [x-cloak] { display: none !important; }
+  .toast-in { animation: toastIn 0.4s cubic-bezier(.2,.9,.2,1); }
+  @keyframes toastIn { from { opacity:0; transform: translateY(-12px) translateX(-50%);} to {opacity:1; transform: translateY(0) translateX(-50%);} }
+  input[type="range"] { accent-color: #DE7885; }
+  .focus-ring:focus-visible { outline: 2px solid #C65D6C; outline-offset: 2px; }
+
+  /* ---- Reveal on scroll: elementos "vivos" que aparecem suavemente ---- */
+  .reveal {
+    opacity: 0;
+    transform: translateY(28px);
+    transition: opacity 0.7s cubic-bezier(.2,.7,.3,1), transform 0.7s cubic-bezier(.2,.7,.3,1);
+    will-change: opacity, transform;
+  }
+  .reveal.is-visible { opacity: 1; transform: translateY(0); }
+  .product-card { transition: transform 0.35s ease, box-shadow 0.35s ease; }
+  .product-card:hover { transform: translateY(-6px); }
+  .badge-pulse { animation: pulseGlow 2.2s ease-in-out infinite; }
+  @keyframes pulseGlow {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(222,120,133,0.35); }
+    50% { box-shadow: 0 0 0 6px rgba(222,120,133,0); }
+  }
+</style>
+</head>
+<body class="text-ink antialiased">
+
+<!-- ============ APP SHELL ============ -->
+<div class="min-h-screen flex flex-col md:flex-row">
+
+  <!-- ============ SIDEBAR (desktop) ============ -->
+  <aside class="hidden md:flex md:w-64 lg:w-72 shrink-0 flex-col border-r border-rose-100 bg-white/70 backdrop-blur px-6 py-8 sticky top-0 h-screen">
+    <div class="flex items-center gap-2.5 mb-10 px-1">
+      <div class="w-9 h-9 rounded-full bg-rose-200 flex items-center justify-center shrink-0">
+        <i data-icon="feather" class="w-4.5 h-4.5 text-rose-700" style="width:18px;height:18px"></i>
+      </div>
+      <div>
+        <p class="font-display text-xl leading-none text-ink">Casu</p>
+        <p class="text-[11px] text-ink/50 mt-0.5 tracking-wide">cuidado que não falha</p>
+      </div>
+    </div>
+
+    <nav class="flex flex-col gap-1" id="nav-desktop"></nav>
+
+    <div class="mt-auto pt-6 border-t border-rose-100/80">
+      <button id="profile-box-desktop" class="w-full text-left rounded-2xl bg-sky-50 p-4 hover:bg-sky-100 transition">
+        <p id="profile-line1-desktop" class="text-xs text-ink/60 mb-1">Configurar perfil do bebê</p>
+        <p id="profile-line2-desktop" class="text-sm font-medium text-ink">Toque para começar</p>
+      </button>
+    </div>
+  </aside>
+
+  <!-- ============ MAIN ============ -->
+  <div class="flex-1 min-w-0">
+
+    <!-- Topbar mobile -->
+    <header class="md:hidden sticky top-0 z-30 bg-cream/90 backdrop-blur border-b border-rose-100 px-5 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <div class="w-8 h-8 rounded-full bg-rose-200 flex items-center justify-center">
+          <i data-icon="feather" class="text-rose-700" style="width:16px;height:16px"></i>
+        </div>
+        <span class="font-display text-lg">Casu</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <button id="profile-box-mobile" class="w-9 h-9 rounded-full bg-white shadow-soft flex items-center justify-center">
+          <i data-icon="baby" class="text-ink/70" style="width:16px;height:16px"></i>
+        </button>
+        <button id="alert-bell" class="relative w-9 h-9 rounded-full bg-white shadow-soft flex items-center justify-center">
+          <i data-icon="bell" class="text-ink/70" style="width:17px;height:17px"></i>
+          <span id="bell-dot" class="hidden absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-rose-500 border-2 border-cream"></span>
+        </button>
+      </div>
+    </header>
+
+    <main class="px-5 md:px-10 lg:px-12 py-6 md:py-10 pb-28 md:pb-12 max-w-6xl mx-auto">
+
+      <!-- Alert banner (global, zero falhas) -->
+      <div id="global-alert" class="hidden mb-6 rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4 flex items-start gap-3 shadow-soft">
+        <div class="w-9 h-9 rounded-full bg-rose-200 flex items-center justify-center shrink-0 mt-0.5">
+          <i data-icon="clock" class="text-rose-700" style="width:18px;height:18px"></i>
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="font-semibold text-rose-800 text-sm">Atenção: itens no prazo de reabastecer</p>
+          <p id="global-alert-text" class="text-sm text-rose-700/80 mt-0.5"></p>
+        </div>
+        <button data-nav="lembretes" class="shrink-0 text-xs font-semibold bg-rose-600 text-white px-3.5 py-2 rounded-full hover:bg-rose-700 transition">Ver agora</button>
+      </div>
+
+      <!-- ===================== VIEW: INÍCIO ===================== -->
+      <section id="view-inicio" class="view">
+        <div class="mb-8">
+          <p id="home-greeting" class="text-sm text-rose-600 font-medium mb-1">Olá! 🌿</p>
+          <h1 id="home-title" class="font-display text-3xl md:text-4xl text-ink">Como está o dia do seu bebê?</h1>
+          <p class="text-ink/55 mt-2 text-sm md:text-base max-w-xl">Aqui está um resumo rápido do estoque, dicas da fase e novidades para vocês duas.</p>
+        </div>
+
+        <!-- quick stats -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-10">
+          <div class="rounded-2xl bg-white shadow-soft p-4 md:p-5">
+            <p id="stat-suf" class="font-display text-2xl md:text-3xl text-sage-600">0</p>
+            <p class="text-xs text-ink/50 mt-1">Suficientes</p>
+          </div>
+          <div class="rounded-2xl bg-white shadow-soft p-4 md:p-5">
+            <p id="stat-acab" class="font-display text-2xl md:text-3xl text-amber-600">0</p>
+            <p class="text-xs text-ink/50 mt-1">Acabando</p>
+          </div>
+          <div class="rounded-2xl bg-white shadow-soft p-4 md:p-5">
+            <p id="stat-urg" class="font-display text-2xl md:text-3xl text-rose-600">0</p>
+            <p class="text-xs text-ink/50 mt-1">Reabastecer</p>
+          </div>
+          <div class="rounded-2xl bg-white shadow-soft p-4 md:p-5">
+            <p id="stat-age" class="font-display text-2xl md:text-3xl text-sky-600">–</p>
+            <p class="text-xs text-ink/50 mt-1">Fase do bebê</p>
+          </div>
+        </div>
+
+        <!-- Lembretes preview -->
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="font-display text-xl text-ink">Estoque em foco</h2>
+          <button data-nav="lembretes" class="text-xs font-semibold text-rose-600 hover:text-rose-700 flex items-center gap-1">Ver todos <i data-icon="arrow-right" style="width:13px;height:13px"></i></button>
+        </div>
+        <div id="home-reminders-preview" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-10"></div>
+
+        <!-- Dicas da fase -->
+        <div class="flex items-center justify-between mb-4">
+          <h2 id="home-articles-heading" class="font-display text-xl text-ink">Dicas para a fase do seu bebê</h2>
+          <button data-nav="dicas" class="text-xs font-semibold text-rose-600 hover:text-rose-700 flex items-center gap-1">Ver tudo <i data-icon="arrow-right" style="width:13px;height:13px"></i></button>
+        </div>
+        <div id="home-articles-preview" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+      </section>
+
+      <!-- ===================== VIEW: DICAS ===================== -->
+      <section id="view-dicas" class="view hidden">
+        <div class="mb-6">
+          <h1 class="font-display text-3xl text-ink mb-1">Dicas & Maternidade</h1>
+          <p class="text-ink/55 text-sm">Conteúdo curto e prático, organizado pela fase do seu bebê.</p>
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-3 mb-5">
+          <div class="relative flex-1">
+            <i data-icon="magnifying-glass" class="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink/35" style="width:16px;height:16px"></i>
+            <input id="article-search" type="text" placeholder="Buscar por sono, banho, alimentação..." class="w-full bg-white border border-rose-100 rounded-full pl-10 pr-4 py-2.5 text-sm focus-ring focus:border-rose-300 shadow-soft" />
+          </div>
+        </div>
+        <div id="article-filters" class="flex flex-wrap gap-2 mb-7"></div>
+        <div id="articles-grid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+        <p id="articles-empty" class="hidden text-center text-ink/40 text-sm py-16">Nenhum artigo encontrado. Tente outro termo ✦</p>
+      </section>
+
+      <!-- ===================== VIEW: PRODUTOS ===================== -->
+      <section id="view-produtos" class="view hidden">
+        <div class="mb-6">
+          <h1 class="font-display text-3xl text-ink mb-1">Produtos & Estoque</h1>
+          <p class="text-ink/55 text-sm">Selecionados para a fase atual da Sofia — do jeito que ela precisa agora.</p>
+        </div>
+        <div id="product-filters" class="flex flex-wrap gap-2 mb-7"></div>
+        <div id="products-grid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+      </section>
+
+      <!-- ===================== VIEW: LEMBRETES ===================== -->
+      <section id="view-lembretes" class="view hidden">
+        <div class="flex items-start justify-between gap-4 mb-2 flex-wrap">
+          <div>
+            <h1 class="font-display text-3xl text-ink mb-1">Lembretes de Reabastecimento</h1>
+            <p class="text-ink/55 text-sm max-w-lg">Configure o ciclo de cada item e nunca fique sem o essencial. Zero falhas.</p>
+          </div>
+          <button id="btn-open-add" class="shrink-0 flex items-center gap-1.5 bg-ink text-cream px-4 py-2.5 rounded-full text-sm font-semibold hover:bg-ink/85 transition">
+            <i data-icon="plus" style="width:15px;height:15px"></i> Novo item
+          </button>
+        </div>
+
+        <!-- Add form -->
+        <div id="add-form" class="hidden mt-5 mb-8 rounded-2xl border border-rose-100 bg-white shadow-soft p-5">
+          <p class="font-semibold text-sm mb-4">Adicionar novo item de reabastecimento</p>
+          <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <input id="new-name" placeholder="Nome do produto" class="border border-rose-100 rounded-xl px-3.5 py-2.5 text-sm focus-ring focus:border-rose-300" />
+            <select id="new-cycle" class="border border-rose-100 rounded-xl px-3.5 py-2.5 text-sm focus-ring focus:border-rose-300">
+              <option value="15">Ciclo: a cada 15 dias</option>
+              <option value="30" selected>Ciclo: a cada 30 dias</option>
+              <option value="45">Ciclo: a cada 45 dias</option>
+            </select>
+            <input id="new-date" type="date" class="border border-rose-100 rounded-xl px-3.5 py-2.5 text-sm focus-ring focus:border-rose-300" />
+            <div class="flex gap-2">
+              <button id="btn-save-add" class="flex-1 bg-rose-600 text-white rounded-xl text-sm font-semibold hover:bg-rose-700 transition">Salvar</button>
+              <button id="btn-cancel-add" class="px-3.5 rounded-xl border border-rose-100 text-sm text-ink/60 hover:bg-rose-50 transition">Cancelar</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="reminders-grid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+      </section>
+
+      <!-- ===================== VIEW: CONTA ===================== -->
+      <section id="view-conta" class="view hidden">
+        <p id="conta-loading" class="text-sm text-ink/40 max-w-md mx-auto text-center py-10"></p>
+
+        <!-- Logada FORA: login / cadastro -->
+        <div id="conta-auth" class="hidden max-w-md mx-auto">
+          <div class="mb-6 text-center">
+            <h1 class="font-display text-3xl text-ink mb-1">Minha Conta</h1>
+            <p class="text-ink/55 text-sm">Crie uma conta pra acompanhar pedidos e receber novidades da Casu.</p>
+          </div>
+
+          <div class="flex bg-white rounded-full p-1 shadow-soft mb-6">
+            <button id="tab-login" type="button" class="flex-1 text-sm font-semibold py-2 rounded-full transition">Entrar</button>
+            <button id="tab-signup" type="button" class="flex-1 text-sm font-semibold py-2 rounded-full transition">Criar conta</button>
+          </div>
+
+          <div id="auth-error" class="hidden mb-4 text-sm text-rose-700 bg-rose-50 border border-rose-200 rounded-xl px-4 py-3"></div>
+          <div id="auth-success" class="hidden mb-4 text-sm text-sage-600 bg-sage-100 rounded-xl px-4 py-3"></div>
+
+          <form id="form-login" class="hidden flex flex-col gap-3">
+            <input id="login-email" type="email" required placeholder="Seu e-mail" class="border border-rose-100 rounded-xl px-4 py-3 text-sm focus-ring focus:border-rose-300" />
+            <input id="login-password" type="password" required placeholder="Sua senha" class="border border-rose-100 rounded-xl px-4 py-3 text-sm focus-ring focus:border-rose-300" />
+            <button type="submit" class="bg-rose-600 hover:bg-rose-700 text-white rounded-full py-3 text-sm font-semibold transition">Entrar</button>
+          </form>
+
+          <form id="form-signup" class="hidden flex flex-col gap-3">
+            <input id="signup-email" type="email" required placeholder="Seu e-mail" class="border border-rose-100 rounded-xl px-4 py-3 text-sm focus-ring focus:border-rose-300" />
+            <input id="signup-password" type="password" required minlength="6" placeholder="Crie uma senha (mín. 6 caracteres)" class="border border-rose-100 rounded-xl px-4 py-3 text-sm focus-ring focus:border-rose-300" />
+            <label class="flex items-start gap-2 text-xs text-ink/60 px-1">
+              <input id="signup-optin" type="checkbox" checked class="mt-0.5" />
+              Quero receber novidades, dicas e promoções da Casu por e-mail
+            </label>
+            <button type="submit" class="bg-rose-600 hover:bg-rose-700 text-white rounded-full py-3 text-sm font-semibold transition">Criar conta</button>
+          </form>
+        </div>
+
+        <!-- Logada DENTRO: painel -->
+        <div id="conta-dashboard" class="hidden max-w-2xl">
+          <div class="flex items-center justify-between mb-6 gap-3">
+            <div class="min-w-0">
+              <p class="text-sm text-rose-600 font-medium">Você está logada</p>
+              <h1 id="conta-email" class="font-display text-xl md:text-2xl text-ink truncate"></h1>
+            </div>
+            <button id="btn-logout" class="shrink-0 flex items-center gap-1.5 text-xs font-semibold border border-rose-100 rounded-full px-4 py-2.5 hover:bg-rose-50 transition">
+              <i data-icon="log-out" style="width:14px;height:14px"></i> Sair
+            </button>
+          </div>
+
+          <div class="rounded-2xl bg-sage-100 px-5 py-4 mb-8 text-sm text-sage-600">
+            Novidades por e-mail: <span id="conta-optin-status" class="font-semibold"></span>
+          </div>
+
+          <h2 class="font-display text-xl mb-3">Meus pedidos</h2>
+          <div id="conta-orders" class="space-y-3"></div>
+          <p id="conta-orders-empty" class="hidden text-sm text-ink/40 py-10 text-center">Você ainda não tem pedidos por aqui.</p>
+        </div>
+      </section>
+
+      <!-- ===================== VIEW: SUPORTE ===================== -->
+      <section id="view-suporte" class="view hidden">
+        <div class="mb-8">
+          <h1 class="font-display text-3xl text-ink mb-1">Suporte</h1>
+          <p class="text-ink/55 text-sm">Estamos por perto. Fala com a gente quando precisar.</p>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-5 mb-10">
+          <div class="rounded-3xl bg-sage-100 p-6 md:p-7">
+            <div class="w-11 h-11 rounded-full bg-white flex items-center justify-center mb-4">
+              <i data-icon="comment-dots" class="text-sage-600" style="width:20px;height:20px"></i>
+            </div>
+            <h3 class="font-display text-xl mb-1.5">Fale no WhatsApp</h3>
+            <p class="text-sm text-ink/60 mb-5">Atendimento humano, de mãe pra mãe. Resposta rápida em horário comercial.</p>
+            <a id="support-whatsapp-link" href="#" target="_blank" class="inline-flex items-center gap-2 bg-sage-600 text-white px-5 py-2.5 rounded-full text-sm font-semibold hover:bg-sage-600/90 transition">
+              <i data-icon="comment-dots" style="width:15px;height:15px"></i> Abrir conversa
+            </a>
+          </div>
+          <div class="rounded-3xl bg-sky-50 p-6 md:p-7">
+            <div class="w-11 h-11 rounded-full bg-white flex items-center justify-center mb-4">
+              <i data-icon="envelope" class="text-sky-600" style="width:20px;height:20px"></i>
+            </div>
+            <h3 class="font-display text-xl mb-1.5">Fale por e-mail</h3>
+            <p class="text-sm text-ink/60 mb-5">Prefere escrever com calma? Manda sua dúvida pra gente.</p>
+            <a href="mailto:casuloja@outlook.com" class="inline-flex items-center gap-2 bg-sky-600 text-white px-5 py-2.5 rounded-full text-sm font-semibold hover:bg-sky-600/90 transition">
+              <i data-icon="envelope" style="width:15px;height:15px"></i> casuloja@outlook.com
+            </a>
+          </div>
+        </div>
+
+        <h2 class="font-display text-xl mb-4">Perguntas frequentes</h2>
+        <div id="faq-list" class="space-y-3 max-w-2xl"></div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<!-- ============ BOTTOM NAV (mobile) ============ -->
+<nav class="md:hidden fixed bottom-0 inset-x-0 z-30 bg-white/95 backdrop-blur border-t border-rose-100 px-2 py-2 flex justify-around" id="nav-mobile"></nav>
+
+<!-- ============ WHATSAPP FLOATING BUTTON ============ -->
+<a id="whatsapp-float" href="#" target="_blank"
+   class="fixed bottom-24 md:bottom-7 right-5 z-40 w-14 h-14 rounded-full bg-sage-600 shadow-card flex items-center justify-center hover:scale-105 active:scale-95 transition">
+  <i data-icon="comment-dots" class="text-white" style="width:24px;height:24px"></i>
+</a>
+
+<!-- ============ ARTICLE MODAL ============ -->
+<div id="article-modal" class="hidden fixed inset-0 z-50 flex items-end md:items-center justify-center">
+  <div id="article-modal-backdrop" class="absolute inset-0 bg-ink/40 backdrop-blur-sm"></div>
+  <div class="relative bg-cream w-full md:max-w-lg md:rounded-3xl rounded-t-3xl max-h-[85vh] overflow-y-auto p-6 md:p-8 shadow-card">
+    <button id="article-modal-close" class="absolute top-5 right-5 w-8 h-8 rounded-full bg-white flex items-center justify-center hover:bg-rose-50">
+      <i data-icon="xmark" style="width:16px;height:16px"></i>
+    </button>
+    <span id="modal-category" class="inline-block text-[11px] font-semibold text-rose-600 bg-rose-50 px-2.5 py-1 rounded-full mb-3"></span>
+    <h2 id="modal-title" class="font-display text-2xl mb-1"></h2>
+    <p id="modal-read" class="text-xs text-ink/40 mb-5"></p>
+    <p id="modal-content" class="text-sm text-ink/75 leading-relaxed"></p>
+  </div>
+</div>
+
+<!-- ============ PROFILE MODAL (cada visitante configura o próprio bebê) ============ -->
+<div id="profile-modal" class="hidden fixed inset-0 z-50 flex items-end md:items-center justify-center">
+  <div class="absolute inset-0 bg-ink/40 backdrop-blur-sm"></div>
+  <div class="relative bg-cream w-full md:max-w-sm md:rounded-3xl rounded-t-3xl p-6 md:p-8 shadow-card">
+    <div class="w-11 h-11 rounded-full bg-rose-200 flex items-center justify-center mb-4">
+      <i data-icon="baby" class="text-rose-700" style="width:20px;height:20px"></i>
+    </div>
+    <h2 class="font-display text-2xl mb-1">Conte sobre o seu bebê</h2>
+    <p class="text-sm text-ink/55 mb-5">Assim a gente personaliza dicas, produtos e lembretes pra fase certa.</p>
+    <div class="flex flex-col gap-3">
+      <input id="profile-mom" type="text" placeholder="Seu nome (opcional)" class="border border-rose-100 rounded-xl px-3.5 py-2.5 text-sm focus-ring focus:border-rose-300" />
+      <input id="profile-baby" type="text" placeholder="Nome do bebê" class="border border-rose-100 rounded-xl px-3.5 py-2.5 text-sm focus-ring focus:border-rose-300" />
+      <label class="text-xs text-ink/50">
+        Data de nascimento
+        <input id="profile-birth" type="date" class="mt-1 w-full border border-rose-100 rounded-xl px-3.5 py-2.5 text-sm focus-ring focus:border-rose-300" />
+      </label>
+    </div>
+    <div class="flex gap-2 mt-6">
+      <button id="profile-save" class="flex-1 bg-rose-600 text-white rounded-full text-sm font-semibold py-2.5 hover:bg-rose-700 transition">Salvar e continuar</button>
+      <button id="profile-skip" class="px-4 rounded-full border border-rose-100 text-sm text-ink/60 hover:bg-rose-50 transition">Pular</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ TOAST ============ -->
+<div id="toast" class="hidden toast-in fixed top-5 left-1/2 z-50 bg-ink text-cream text-sm font-medium px-5 py-3 rounded-full shadow-card flex items-center gap-2"></div>
+
+<script>
+/* ==================================================================
+   ÍCONES — SVGs desenhados à mão, embutidos no próprio arquivo.
+   Não dependem de nenhuma fonte, script ou CDN externo, então nunca
+   falham em carregar, seja aqui no preview ou no site publicado.
+================================================================== */
+const ICON_MAP = {
+  'alarm-clock': 'clock', 'arrow-right': 'arrow-right', 'baby': 'baby',
+  'bell': 'bell', 'bell-ring': 'bell', 'book-heart': 'book-open',
+  'calendar': 'calendar-days', 'check': 'check', 'check-circle': 'circle-check',
+  'chevron-down': 'chevron-down', 'clock': 'clock', 'droplets': 'droplet',
+  'external-link': 'arrow-up-right-from-square', 'feather': 'feather',
+  'heart-pulse': 'heart-pulse', 'home': 'house', 'life-buoy': 'life-ring',
+  'mail': 'envelope', 'message-circle': 'comment-dots', 'milk': 'bottle-droplet',
+  'moon': 'moon', 'package': 'box', 'plus': 'plus', 'plus-circle': 'circle-plus',
+  'refresh-cw': 'arrow-rotate-right', 'search': 'magnifying-glass',
+  'shopping-bag': 'bag-shopping', 'sparkles': 'pump-soap',
+  'sticky-note': 'note-sticky', 'utensils': 'utensils', 'x': 'xmark',
+};
+function fa(name){ return ICON_MAP[name] || name; }
+
+const ICONS = {
+  'house': '<path d="M3 11l9-8 9 8"/><path d="M5 10v10h5v-6h4v6h5V10"/>',
+  'book-open': '<path d="M12 6c-2-1.4-5-1.8-8-1v13c3-.8 6-.4 8 1 2-1.4 5-1.8 8-1V5c-3-.8-6-.4-8 1z"/>',
+  'bag-shopping': '<path d="M6 8h12l-1 12H7L6 8z"/><path d="M9 8V6a3 3 0 016 0v2"/>',
+  'bell': '<path d="M6 8a6 6 0 0112 0c0 5 2 6 2 6H4s2-1 2-6z"/><path d="M10 21a2 2 0 004 0"/>',
+  'life-ring': '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><path d="M5.5 5.5l3.2 3.2M18.5 5.5l-3.2 3.2M5.5 18.5l3.2-3.2M18.5 18.5l-3.2-3.2"/>',
+  'baby': '<circle cx="12" cy="7" r="4"/><path d="M5 21c0-4.4 3.1-7 7-7s7 2.6 7 7"/>',
+  'clock': '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/>',
+  'arrow-right': '<path d="M4 12h16M13 6l6 6-6 6"/>',
+  'magnifying-glass': '<circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/>',
+  'plus': '<path d="M12 5v14M5 12h14"/>',
+  'xmark': '<path d="M6 6l12 12M18 6L6 18"/>',
+  'comment-dots': '<path d="M21 11.5a8 8 0 01-11.8 7L3 20l1.5-5.3A8 8 0 1121 11.5z"/><circle cx="8" cy="12" r="0.7" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="0.7" fill="currentColor" stroke="none"/><circle cx="16" cy="12" r="0.7" fill="currentColor" stroke="none"/>',
+  'envelope': '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>',
+  'chevron-down': '<path d="M6 9l6 6 6-6"/>',
+  'check': '<path d="M5 13l4 4L19 7"/>',
+  'circle-check': '<circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.5 2.5L16 9"/>',
+  'arrow-rotate-right': '<path d="M4 12a8 8 0 0114-5.3M20 4v6h-6"/><path d="M20 12a8 8 0 01-14 5.3M4 20v-6h6"/>',
+  'calendar-days': '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+  'arrow-up-right-from-square': '<path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><path d="M15 3h6v6"/><path d="M10 14L21 3"/>',
+  'circle-plus': '<circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/>',
+  'circle-exclamation': '<circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5"/><circle cx="12" cy="16.3" r="0.9" fill="currentColor" stroke="none"/>',
+  'droplet': '<path d="M12 3s7 7.4 7 12a7 7 0 01-14 0c0-4.6 7-12 7-12z"/>',
+  'heart-pulse': '<path d="M12 20.5s-7.5-4.5-9.8-9C1 8 3 4.3 6.8 4.3c2 0 4 1.5 5.2 3.2 1.2-1.7 3.2-3.2 5.2-3.2C21 4.3 23 8 21.8 11.5c-2.3 4.5-9.8 9-9.8 9z"/><path d="M6 12h3l1.5-3L13 15l1.5-3H18"/>',
+  'bottle-droplet': '<path d="M9.5 2h5M10.5 2v2.8l-2 2.2v13a2 2 0 002 2h3a2 2 0 002-2V7l-2-2.2V2"/>',
+  'moon': '<path d="M20 14.2A8.5 8.5 0 119.8 4 7 7 0 0020 14.2z"/>',
+  'box': '<path d="M3 8l9-5 9 5-9 5-9-5z"/><path d="M3 8v9l9 5 9-5V8"/><path d="M12 13v9"/>',
+  'note-sticky': '<path d="M5 3h11l5 5v10a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z"/><path d="M15.5 3.2V8h4.8"/>',
+  'utensils': '<path d="M6 3v7a2 2 0 002 2 2 2 0 002-2V3M8 12v9M17 3c-1.5 0-3 1.6-3 4v4h3M17 3v18"/>',
+  'pump-soap': '<path d="M9 3h4M10 3v2h2V3M8 7h6l1 12a2 2 0 01-2 2H9a2 2 0 01-2-2L8 7z"/>',
+  'feather': '<path d="M20 4L9 15"/><path d="M20 4c-6.3 0-14.3 3-16 11 3 1.2 7.3 0 9.3-2"/><path d="M9 15l-5 5"/>',
+  'user': '<circle cx="12" cy="8" r="4"/><path d="M5 21c0-4.4 3.1-7 7-7s7 2.6 7 7"/>',
+  'log-out': '<path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/>',
+};
+
+/* ==================================================================
+   SCROLL REVEAL — observa elementos .reveal e os anima ao entrarem
+   na tela. Nativo do navegador (IntersectionObserver), sem libs.
+================================================================== */
+const revealObserver = ('IntersectionObserver' in window) ? new IntersectionObserver((entries)=>{
+  entries.forEach(entry=>{
+    if (entry.isIntersecting){
+      entry.target.classList.add('is-visible');
+      revealObserver.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' }) : null;
+
+function observeReveals(){
+  const els = document.querySelectorAll('.reveal:not(.is-visible)');
+  if (!revealObserver){
+    // navegador muito antigo: mostra tudo direto, sem animação
+    els.forEach(el => el.classList.add('is-visible'));
+    return;
+  }
+  els.forEach(el => revealObserver.observe(el));
+}
+
+function renderIcons(){
+  document.querySelectorAll('[data-icon]').forEach(el=>{
+    const key = el.getAttribute('data-icon');
+    const path = ICONS[key];
+    if (!path) return;
+    const size = parseInt(el.style.width) || 16;
+    el.outerHTML = `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline-block shrink-0 align-middle ${el.className||''}">${path}</svg>`;
+  });
+}
+
+/* ==================================================================
+   MOCK DATA
+================================================================== */
+const NAV_ITEMS = [
+  { id: 'inicio',    label: 'Início',              icon: 'home' },
+  { id: 'dicas',     label: 'Dicas & Maternidade',  icon: 'book-heart' },
+  { id: 'produtos',  label: 'Produtos & Estoque',   icon: 'shopping-bag' },
+  { id: 'lembretes', label: 'Lembretes',            icon: 'bell-ring' },
+  { id: 'conta',     label: 'Conta',                icon: 'user' },
+  { id: 'suporte',   label: 'Suporte',              icon: 'life-buoy' },
+];
+
+const todayISO = () => new Date().toISOString().slice(0,10);
+function daysAgo(n){ const d = new Date(); d.setDate(d.getDate()-n); return d.toISOString().slice(0,10); }
+
+// Como a Casu ainda não tem loja própria, os links padrão abrem uma busca no Mercado Livre
+// pelo nome do produto. O primeiro item já usa o anúncio real que você enviou — troque os
+// demais assim que tiver os links de cada anúncio (é só editar o campo "link" de cada item).
+function mlSearchLink(name){
+  return `https://lista.mercadolivre.com.br/${encodeURIComponent(name)}`;
+}
+const REAL_ML_LINK = 'https://www.mercadolivre.com.br/up/MLBU3763087831?matt_tool=38524122&pdp_filters=item_id:MLB4455644655&ua=Z71G-cEmvxbYQwudcWrGI2goVDPyXoI4uoGn58TWoFYBgEw#origin=share&sid=share&wid=MLB4455644655&action=copy';
+
+let reminders = [
+  { id: 1, name: 'Fraldas P',              icon: 'baby',        cycleDays: 15, lastPurchase: daysAgo(14), link: REAL_ML_LINK },
+  { id: 2, name: 'Lenços umedecidos',      icon: 'droplets',    cycleDays: 30, lastPurchase: daysAgo(20), link: mlSearchLink('Lenços umedecidos') },
+  { id: 3, name: 'Pomada para assaduras',  icon: 'heart-pulse', cycleDays: 45, lastPurchase: daysAgo(10), link: mlSearchLink('Pomada para assaduras') },
+  { id: 4, name: 'Fórmula infantil',       icon: 'milk',        cycleDays: 30, lastPurchase: daysAgo(29), link: mlSearchLink('Fórmula infantil') },
+  { id: 5, name: 'Sabonete líquido',       icon: 'sparkles',    cycleDays: 45, lastPurchase: daysAgo(5),  link: mlSearchLink('Sabonete líquido infantil') },
+  { id: 6, name: 'Lenços de papel/toalha', icon: 'sticky-note', cycleDays: 15, lastPurchase: daysAgo(2),  link: mlSearchLink('Toalhas umedecidas bebê') },
+];
+
+const articles = [
+  { id: 1, phase: 'Recém-nascido', title: 'Como dar o primeiro banho com segurança', excerpt: 'Passo a passo tranquilo para os primeiros banhos, sem estresse.', read: '3 min', content: 'Escolha um ambiente aquecido, entre 24°C e 27°C, e tenha tudo separado antes de começar: toalha, fralda limpa e roupinha. A água deve estar morna, entre 36°C e 37°C — teste sempre no pulso do seu braço. Segure a cabeça e o pescoço do bebê com firmeza o tempo todo. Banhos rápidos, de 5 a 10 minutos, são mais do que suficientes nesta fase. Seque bem as dobrinhas para evitar assaduras e aproveite esse momento de conexão com calma.' },
+  { id: 2, phase: 'Recém-nascido', title: 'Entendendo o choro do recém-nascido', excerpt: 'Fome, sono, colo ou desconforto: aprenda a diferenciar os sinais.', read: '4 min', content: 'Nas primeiras semanas, o choro é a única forma de comunicação do bebê. Um choro curto e repetitivo geralmente indica fome; um choro que aumenta gradualmente pode ser cansaço. Observe também a linguagem corporal: pernas encolhidas podem indicar cólica, enquanto esfregar os olhos costuma indicar sono. Com o tempo, você vai reconhecer os padrões da sua própria filha — confie na sua percepção, ela é mais afiada do que parece.' },
+  { id: 3, phase: 'Recém-nascido', title: 'Cuidados com o coto umbilical', excerpt: 'O que fazer (e não fazer) até a queda natural.', read: '2 min', content: 'Mantenha a região sempre limpa e seca, higienizando com água e sabão neutro durante o banho. Evite produtos como álcool sem orientação médica recente, pois práticas mudaram nos últimos anos. Dobre a fralda para baixo do coto, deixando-o exposto ao ar. A queda costuma ocorrer entre 7 e 15 dias. Procure o pediatra se notar vermelhidão, mau cheiro ou secreção.' },
+  { id: 4, phase: '3-6 meses', title: 'Marcos de desenvolvimento dos 3 aos 6 meses', excerpt: 'O que esperar do sorriso social ao sustentar a cabeça.', read: '4 min', content: 'Nesta fase, muitos bebês já sustentam bem a cabeça, começam a rolar e exploram as mãozinhas levando tudo à boca. O sorriso social se torna mais frequente e intencional, e a bebê começa a "conversar" com balbucios. Cada criança tem seu próprio ritmo — esses marcos são uma referência, não uma corrida. Estimule com brinquedos coloridos e tempo de barriga para baixo supervisionado.' },
+  { id: 5, phase: '3-6 meses', title: 'Como lidar com o salto de desenvolvimento', excerpt: 'Fases de choro intenso costumam vir acompanhadas de avanços.', read: '3 min', content: 'É comum que, antes de um novo marco — como rolar ou sentar — o bebê fique mais agitado, chore mais e queira mais colo. Esses períodos, populares como "saltos", costumam durar de alguns dias a duas semanas. Priorize rotina, paciência e colo à vontade: não existe "manha" nessa fase, existe cérebro em desenvolvimento acelerado.' },
+  { id: 6, phase: 'Introdução Alimentar', title: 'Sinais de que o bebê está pronto para começar', excerpt: 'Além dos 6 meses, observe estes 4 sinais de prontidão.', read: '3 min', content: 'Além da idade recomendada (a partir dos 6 meses), observe se o bebê já senta com apoio mínimo, sustenta bem a cabeça, perdeu o reflexo de protrusão da língua e demonstra interesse pela comida da família. A introdução deve ser gradual, com um alimento novo por vez, respeitando o apetite e sem forçar. Consulte sempre o pediatra antes de iniciar.' },
+  { id: 7, phase: 'Introdução Alimentar', title: 'Primeiros alimentos: por onde começar', excerpt: 'Papinhas, purês ou BLW? Um panorama simples.', read: '4 min', content: 'Não existe um único caminho certo. Papinhas em purê e o método BLW (Baby-Led Weaning), onde o bebê come pedaços macios sozinho, são abordagens válidas — muitas famílias combinam as duas. Comece com legumes e frutas cozidas e amassadas, como abóbora, cenoura, maçã e banana. Introduza um alimento por vez, aguardando de 2 a 3 dias entre eles para observar reações alérgicas.' },
+  { id: 8, phase: 'Sono', title: 'Criando uma rotina de sono tranquila', excerpt: 'Pequenos rituais que ajudam o corpo a entender a hora de dormir.', read: '3 min', content: 'Um banho morno, luz baixa, uma canção sempre igual e o mesmo horário todas as noites ajudam o cérebro do bebê a associar esses sinais ao sono. Evite telas e estímulos fortes na última hora do dia. A consistência é mais importante do que a duração do ritual — 15 minutos repetidos todos os dias valem mais que uma hora esporádica.' },
+  { id: 9, phase: 'Sono', title: 'Regressões de sono: é normal?', excerpt: 'Por que noites que já eram tranquilas voltam a ser difíceis.', read: '3 min', content: 'Sim, é normal. Regressões costumam coincidir com saltos de desenvolvimento, dentição ou mudanças de rotina, e geralmente duram de 1 a 4 semanas. Mantenha a rotina de sono estável, ofereça mais colo se necessário e lembre-se: é uma fase, não um retrocesso definitivo. Ela passa.' },
+];
+
+const products = [
+  { id: 1, phase: '3-6 meses', name: 'Fralda Casu Toque Macio P', price: 'R$ 42,90', desc: 'Alta absorção por até 12h, ideal para o dia a dia do seu bebê.', link: REAL_ML_LINK, color: 'bg-rose-100', icon: 'baby' },
+  { id: 2, phase: '3-6 meses', name: 'Lenços Umedecidos Sensitive', price: 'R$ 18,50', desc: 'Sem álcool e sem perfume, para peles sensíveis.', link: mlSearchLink('Lenços Umedecidos Sensitive'), color: 'bg-sky-100', icon: 'droplets' },
+  { id: 3, phase: '3-6 meses', name: 'Pomada Protetora Extra', price: 'R$ 24,90', desc: 'Barreira contra assaduras com óxido de zinco.', link: mlSearchLink('Pomada Protetora Assaduras'), color: 'bg-sand', icon: 'heart-pulse' },
+  { id: 4, phase: 'Introdução Alimentar', name: 'Kit Início Alimentar', price: 'R$ 89,00', desc: 'Pratinho com ventosa, colheres macias e babador.', link: mlSearchLink('Kit Início Alimentar Bebê'), color: 'bg-sage-100', icon: 'utensils' },
+  { id: 5, phase: 'Introdução Alimentar', name: 'Potinhos para Papinha', price: 'R$ 35,00', desc: 'Conjunto com 6 potes herméticos para congelar refeições.', link: mlSearchLink('Potinhos para Papinha Bebê'), color: 'bg-amber-100', icon: 'package' },
+  { id: 6, phase: 'Sono', name: 'Máquina de Ruído Branco', price: 'R$ 129,90', desc: 'Ajuda o bebê a relaxar e dormir com mais tranquilidade.', link: mlSearchLink('Máquina de Ruído Branco Bebê'), color: 'bg-sky-100', icon: 'moon' },
+  { id: 7, phase: 'Recém-nascido', name: 'Fórmula Infantil Fase 1', price: 'R$ 64,90', desc: 'Nutrição completa recomendada do nascimento aos 6 meses.', link: mlSearchLink('Fórmula Infantil Fase 1'), color: 'bg-rose-100', icon: 'milk' },
+  { id: 8, phase: 'Recém-nascido', name: 'Sabonete Líquido Cabeça aos Pés', price: 'R$ 21,90', desc: 'Fórmula suave, testada dermatologicamente.', link: mlSearchLink('Sabonete Líquido Cabeça aos Pés Bebê'), color: 'bg-sand', icon: 'sparkles' },
+];
+
+const faqs = [
+  { q: 'Como funciona o cálculo do prazo de reabastecimento?', a: 'A gente calcula automaticamente com base na data da sua última compra e no ciclo médio de consumo que você define (15, 30 ou 45 dias). Quando o prazo chega perto, avisamos por aqui.' },
+  { q: 'Posso mudar o ciclo de um produto a qualquer momento?', a: 'Sim! Basta ir até "Lembretes", escolher o item e ajustar o ciclo no seletor do próprio card. A atualização é imediata.' },
+  { q: 'O botão "Reabastecer Agora" me leva pra onde?', a: 'Ele te leva direto para a página de compra do produto na nossa loja, já pronto para finalizar o pedido.' },
+  { q: 'Como falo com uma pessoa de verdade?', a: 'É só clicar no botão flutuante do WhatsApp em qualquer tela, ou usar o botão "Abrir conversa" aqui na página de Suporte.' },
+];
+
+/* ==================================================================
+   STATE / HELPERS
+================================================================== */
+let currentView = 'inicio';
+const WHATSAPP_NUMBER = '5511988040037';
+const WHATSAPP_MSG = encodeURIComponent('Olá! Preciso de ajuda com os produtos do meu bebê.');
+const waLink = `https://wa.me/${WHATSAPP_NUMBER}?text=${WHATSAPP_MSG}`;
+
+function reminderStatus(r){
+  const last = new Date(r.lastPurchase);
+  const now = new Date();
+  const daysElapsed = Math.floor((now - last) / 86400000);
+  const daysRemaining = r.cycleDays - daysElapsed;
+  const percent = Math.min(100, Math.max(0, Math.round((daysElapsed / r.cycleDays) * 100)));
+  let status, color, ring, badge;
+  if (daysRemaining <= 0) { status = 'Reabastecer Agora'; color = 'rose'; }
+  else if (daysRemaining <= Math.max(3, Math.round(r.cycleDays*0.2))) { status = 'Acabando'; color = 'amber'; }
+  else { status = 'Suficiente'; color = 'sage'; }
+  return { daysElapsed, daysRemaining, percent, status, color };
+}
+
+const colorMap = {
+  rose:  { ring: '#DE7885', bg: 'bg-rose-50',  text: 'text-rose-700',  badge: 'bg-rose-100 text-rose-700',  btn: 'bg-rose-600 hover:bg-rose-700' },
+  amber: { ring: '#E4B65C', bg: 'bg-amber-50', text: 'text-amber-700', badge: 'bg-amber-100 text-amber-700', btn: 'bg-amber-500 hover:bg-amber-600' },
+  sage:  { ring: '#8FAE7C', bg: 'bg-sage-100', text: 'text-sage-600',  badge: 'bg-sage-100 text-sage-600',  btn: 'bg-sage-600 hover:bg-sage-600/90' },
+};
+
+function showToast(msg, icon='check-circle'){
+  const t = document.getElementById('toast');
+  t.innerHTML = `<i data-icon="${fa(icon)}" style="width:15px;height:15px"></i><span>${msg}</span>`;
+  t.classList.remove('hidden');
+  renderIcons();
+  clearTimeout(window.__toastTimer);
+  window.__toastTimer = setTimeout(()=> t.classList.add('hidden'), 2600);
+}
+
+/* ==================================================================
+   PERFIL DO BEBÊ — cada visitante configura o próprio, salvo neste navegador
+================================================================== */
+const PROFILE_KEY = 'casu_profile_v1';
+let currentPhase = '3-6 meses';
+
+function loadProfile(){
+  try {
+    const raw = localStorage.getItem(PROFILE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch(e){ return null; }
+}
+function saveProfile(p){
+  try { localStorage.setItem(PROFILE_KEY, JSON.stringify(p)); } catch(e){}
+}
+function ageInMonths(birthISO){
+  if (!birthISO) return null;
+  const birth = new Date(birthISO);
+  const now = new Date();
+  let months = (now.getFullYear() - birth.getFullYear()) * 12 + (now.getMonth() - birth.getMonth());
+  if (now.getDate() < birth.getDate()) months--;
+  return Math.max(0, months);
+}
+function phaseFromMonths(m){
+  if (m === null) return '3-6 meses';
+  if (m < 3) return 'Recém-nascido';
+  if (m < 6) return '3-6 meses';
+  return 'Introdução Alimentar';
+}
+
+let profile = loadProfile();
+
+function applyProfile(){
+  const momName = (profile?.mom || '').trim();
+  const babyName = (profile?.baby || '').trim();
+  const months = profile?.birth ? ageInMonths(profile.birth) : null;
+  const phase = phaseFromMonths(months);
+  const ageLabel = months === null ? '–' : (months < 1 ? 'RN' : months + 'm');
+  const babyRef = babyName ? `de ${babyName}` : 'do seu bebê';
+
+  document.getElementById('home-greeting').textContent = momName ? `Olá, ${momName} 🌿` : 'Olá! 🌿';
+  document.getElementById('home-title').textContent = `Como está o dia ${babyRef}?`;
+  document.getElementById('home-articles-heading').textContent = `Dicas para a fase ${babyRef}`;
+  document.getElementById('stat-age').textContent = ageLabel;
+
+  const line1 = profile ? `Bebê ${babyName || 'sem nome'}${months !== null ? ' · ' + ageLabel : ''}` : 'Configurar perfil do bebê';
+  const line2 = profile ? `Fase: ${phase}` : 'Toque para começar';
+  document.getElementById('profile-line1-desktop').textContent = line1;
+  document.getElementById('profile-line2-desktop').textContent = line2;
+
+  currentPhase = phase;
+}
+
+function openProfileModal(){
+  document.getElementById('profile-mom').value = profile?.mom || '';
+  document.getElementById('profile-baby').value = profile?.baby || '';
+  document.getElementById('profile-birth').value = profile?.birth || '';
+  document.getElementById('profile-modal').classList.remove('hidden');
+}
+function closeProfileModal(){
+  document.getElementById('profile-modal').classList.add('hidden');
+}
+document.getElementById('profile-save').addEventListener('click', ()=>{
+  profile = {
+    mom: document.getElementById('profile-mom').value,
+    baby: document.getElementById('profile-baby').value,
+    birth: document.getElementById('profile-birth').value,
+  };
+  saveProfile(profile);
+  applyProfile();
+  renderArticles();
+  closeProfileModal();
+  showToast('Perfil salvo! Personalizamos tudo pra vocês 💛');
+});
+document.getElementById('profile-skip').addEventListener('click', closeProfileModal);
+document.getElementById('profile-box-desktop').addEventListener('click', openProfileModal);
+document.getElementById('profile-box-mobile').addEventListener('click', openProfileModal);
+
+/* ==================================================================
+   SUPABASE — conexão real: login, cadastro e pedidos.
+   ATENÇÃO: só funciona no site publicado. Dentro do preview do
+   Claude, chamadas para serviços externos são bloqueadas por
+   segurança, então esta tela vai mostrar um aviso aqui, o que é
+   esperado — não é um bug.
+================================================================== */
+const SUPABASE_URL = 'https://bqahepvcgmkiqextbnnc.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxYWhlcHZjZ21raXFleHRibm5jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgxODc1NjYsImV4cCI6MjEwMzc2MzU2Nn0.j9mYa7FzwyJXyYE5C47CzZ75QX7Dsmc-kX33ki_Vgl0';
+const sb = (window.supabase && window.supabase.createClient)
+  ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+  : null;
+
+function setAuthMode(mode){
+  document.getElementById('form-login').classList.toggle('hidden', mode !== 'login');
+  document.getElementById('form-signup').classList.toggle('hidden', mode !== 'signup');
+  document.getElementById('tab-login').className = `flex-1 text-sm font-semibold py-2 rounded-full transition ${mode==='login' ? 'bg-ink text-cream' : 'text-ink/50'}`;
+  document.getElementById('tab-signup').className = `flex-1 text-sm font-semibold py-2 rounded-full transition ${mode==='signup' ? 'bg-ink text-cream' : 'text-ink/50'}`;
+  hideAuthMessages();
+}
+function hideAuthMessages(){
+  document.getElementById('auth-error').classList.add('hidden');
+  document.getElementById('auth-success').classList.add('hidden');
+}
+function showAuthError(msg){
+  hideAuthMessages();
+  const el = document.getElementById('auth-error');
+  el.textContent = msg;
+  el.classList.remove('hidden');
+}
+function showAuthSuccess(msg){
+  hideAuthMessages();
+  const el = document.getElementById('auth-success');
+  el.textContent = msg;
+  el.classList.remove('hidden');
+}
+function traduzErroAuth(msg){
+  if (/Invalid login credentials/i.test(msg)) return 'E-mail ou senha incorretos.';
+  if (/User already registered/i.test(msg)) return 'Esse e-mail já tem uma conta. Tente entrar.';
+  if (/Email not confirmed/i.test(msg)) return 'Confirme seu e-mail antes de entrar — verifique sua caixa de entrada (e o spam).';
+  if (/Password should be at least/i.test(msg)) return 'A senha precisa ter pelo menos 6 caracteres.';
+  return 'Algo deu errado: ' + msg;
+}
+
+async function handleSignup(e){
+  e.preventDefault();
+  if (!sb){ showAuthError('Esse recurso só funciona no site publicado, não aqui no preview.'); return; }
+  const email = document.getElementById('signup-email').value.trim();
+  const password = document.getElementById('signup-password').value;
+  const optIn = document.getElementById('signup-optin').checked;
+  const { error } = await sb.auth.signUp({
+    email, password,
+    options: { data: {
+      marketing_opt_in: optIn,
+      mom_name: profile?.mom || '',
+      baby_name: profile?.baby || '',
+      baby_birth: profile?.birth || null,
+    }}
+  });
+  if (error) { showAuthError(traduzErroAuth(error.message)); return; }
+  showAuthSuccess('Conta criada! Verifique seu e-mail para confirmar antes de entrar.');
+  e.target.reset();
+}
+
+async function handleLogin(e){
+  e.preventDefault();
+  if (!sb){ showAuthError('Esse recurso só funciona no site publicado, não aqui no preview.'); return; }
+  const email = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+  const { error } = await sb.auth.signInWithPassword({ email, password });
+  if (error) { showAuthError(traduzErroAuth(error.message)); return; }
+  hideAuthMessages();
+  renderConta();
+}
+
+async function handleLogout(){
+  if (!sb) return;
+  await sb.auth.signOut();
+  renderConta();
+}
+
+async function renderConta(){
+  const loading = document.getElementById('conta-loading');
+  const authBox = document.getElementById('conta-auth');
+  const dash = document.getElementById('conta-dashboard');
+  authBox.classList.add('hidden');
+  dash.classList.add('hidden');
+  loading.classList.remove('hidden');
+
+  if (!sb){
+    loading.textContent = 'O login só funciona no site publicado — aqui no preview do Claude, chamadas para fora são bloqueadas por segurança. Publique o site e teste por lá.';
+    return;
+  }
+
+  const { data: { session } } = await sb.auth.getSession();
+  loading.classList.add('hidden');
+
+  if (!session){
+    authBox.classList.remove('hidden');
+    setAuthMode('login');
+    return;
+  }
+
+  dash.classList.remove('hidden');
+  document.getElementById('conta-email').textContent = session.user.email;
+
+  const { data: prof } = await sb.from('profiles').select('marketing_opt_in').eq('id', session.user.id).single();
+  document.getElementById('conta-optin-status').textContent = prof?.marketing_opt_in ? 'Ativado' : 'Desativado';
+
+  const { data: orders } = await sb.from('orders').select('*').eq('user_id', session.user.id).order('created_at', { ascending: false });
+  const ordersEl = document.getElementById('conta-orders');
+  const emptyEl = document.getElementById('conta-orders-empty');
+  if (!orders || orders.length === 0){
+    ordersEl.innerHTML = '';
+    emptyEl.classList.remove('hidden');
+  } else {
+    emptyEl.classList.add('hidden');
+    ordersEl.innerHTML = orders.map(o => `
+      <div class="rounded-2xl bg-white shadow-soft px-5 py-4 flex items-center justify-between gap-3">
+        <div class="min-w-0">
+          <p class="font-semibold text-sm truncate">${o.product_name}</p>
+          <p class="text-xs text-ink/40 mt-0.5">${new Date(o.created_at).toLocaleDateString('pt-BR')}</p>
+        </div>
+        <span class="shrink-0 text-[11px] font-semibold px-3 py-1 rounded-full bg-sky-50 text-sky-700">${o.status}</span>
+      </div>
+    `).join('');
+  }
+}
+
+document.getElementById('tab-login').addEventListener('click', ()=> setAuthMode('login'));
+document.getElementById('tab-signup').addEventListener('click', ()=> setAuthMode('signup'));
+document.getElementById('form-login').addEventListener('submit', handleLogin);
+document.getElementById('form-signup').addEventListener('submit', handleSignup);
+document.getElementById('btn-logout').addEventListener('click', handleLogout);
+
+if (sb){
+  sb.auth.onAuthStateChange(()=>{ if (currentView === 'conta') renderConta(); });
+}
+
+/* ==================================================================
+   RENDER: NAVIGATION
+================================================================== */
+function renderNav(){
+  const desktop = document.getElementById('nav-desktop');
+  const mobile = document.getElementById('nav-mobile');
+  desktop.innerHTML = NAV_ITEMS.map(item => `
+    <button data-nav="${item.id}" class="nav-btn flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-ink/60 hover:bg-rose-50 hover:text-ink transition ${currentView===item.id?'nav-active':''}">
+      <i data-icon="${fa(item.icon)}" style="width:17px;height:17px"></i> ${item.label}
+    </button>`).join('');
+
+  mobile.innerHTML = NAV_ITEMS.map(item => `
+    <button data-nav="${item.id}" class="nav-btn-m flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl text-[10px] font-medium ${currentView===item.id?'text-rose-600':'text-ink/45'}">
+      <i data-icon="${fa(item.icon)}" style="width:19px;height:19px"></i> ${item.label.split(' ')[0]}
+    </button>`).join('');
+
+  document.querySelectorAll('[data-nav]').forEach(btn=>{
+    btn.addEventListener('click', ()=> switchView(btn.dataset.nav));
+  });
+  renderIcons();
+}
+
+function switchView(id){
+  currentView = id;
+  document.querySelectorAll('.view').forEach(v=>v.classList.add('hidden'));
+  document.getElementById('view-'+id).classList.remove('hidden');
+  renderNav();
+  if (id === 'conta') renderConta();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+/* ==================================================================
+   RENDER: REMINDERS (core feature)
+================================================================== */
+function reminderCard(r, compact=false){
+  const s = reminderStatus(r);
+  const c = colorMap[s.color];
+  return `
+  <div class="rounded-2xl bg-white shadow-soft p-5 flex flex-col gap-4 border border-transparent hover:border-rose-100 transition">
+    <div class="flex items-start justify-between gap-3">
+      <div class="flex items-center gap-3 min-w-0">
+        <div class="w-11 h-11 rounded-full ${c.bg} flex items-center justify-center shrink-0">
+          <i data-icon="${fa(r.icon)}" class="${c.text}" style="width:19px;height:19px"></i>
+        </div>
+        <div class="min-w-0">
+          <p class="font-semibold text-sm truncate">${r.name}</p>
+          <p class="text-xs text-ink/45 mt-0.5">${s.daysRemaining > 0 ? `~${s.daysRemaining} dia(s) restante(s)` : 'Prazo estimado esgotado'}</p>
+        </div>
+      </div>
+      <div class="relative w-12 h-12 shrink-0 rounded-full ring-progress" style="background: conic-gradient(${c.ring} ${s.percent}%, #F1EDE6 ${s.percent}%)">
+        <div class="absolute inset-1 rounded-full bg-white flex items-center justify-center text-[10px] font-bold ${c.text}">${s.percent}%</div>
+      </div>
+    </div>
+
+    <span class="self-start text-[11px] font-semibold px-2.5 py-1 rounded-full ${c.badge}">${s.status}</span>
+
+    ${compact ? '' : `
+    <div class="grid grid-cols-2 gap-2 pt-1 border-t border-rose-50">
+      <label class="text-[11px] text-ink/45">
+        Ciclo
+        <select data-cycle="${r.id}" class="mt-1 w-full border border-rose-100 rounded-lg px-2 py-1.5 text-xs focus-ring focus:border-rose-300">
+          <option value="15" ${r.cycleDays===15?'selected':''}>15 dias</option>
+          <option value="30" ${r.cycleDays===30?'selected':''}>30 dias</option>
+          <option value="45" ${r.cycleDays===45?'selected':''}>45 dias</option>
+        </select>
+      </label>
+      <label class="text-[11px] text-ink/45">
+        Última compra
+        <input data-lastpurchase="${r.id}" type="date" value="${r.lastPurchase}" class="mt-1 w-full border border-rose-100 rounded-lg px-2 py-1.5 text-xs focus-ring focus:border-rose-300" />
+      </label>
+    </div>
+    <div class="flex items-center gap-2">
+      <a href="${r.link}" target="_blank" data-buy="${r.id}" class="flex-1 text-center text-xs font-semibold text-white ${c.btn} rounded-full py-2.5 transition">Reabastecer Agora</a>
+      <button data-bought="${r.id}" title="Marquei como comprado hoje" class="w-9 h-9 shrink-0 rounded-full border border-rose-100 flex items-center justify-center hover:bg-rose-50 transition">
+        <i data-icon="check" style="width:15px;height:15px"></i>
+      </button>
+    </div>`}
+  </div>`;
+}
+
+function renderReminders(){
+  const grid = document.getElementById('reminders-grid');
+  grid.innerHTML = reminders.map(r => reminderCard(r, false)).join('');
+
+  const preview = document.getElementById('home-reminders-preview');
+  const sorted = [...reminders].sort((a,b)=> reminderStatus(a).daysRemaining - reminderStatus(b).daysRemaining);
+  preview.innerHTML = sorted.slice(0,3).map(r => reminderCard(r, true)).join('');
+
+  // stats
+  let suf=0, acab=0, urg=0;
+  reminders.forEach(r=>{
+    const s = reminderStatus(r).status;
+    if (s==='Suficiente') suf++; else if (s==='Acabando') acab++; else urg++;
+  });
+  document.getElementById('stat-suf').textContent = suf;
+  document.getElementById('stat-acab').textContent = acab;
+  document.getElementById('stat-urg').textContent = urg;
+
+  // global alert
+  const urgent = reminders.filter(r => reminderStatus(r).status === 'Reabastecer Agora');
+  const bell = document.getElementById('bell-dot');
+  const banner = document.getElementById('global-alert');
+  if (urgent.length){
+    banner.classList.remove('hidden');
+    bell.classList.remove('hidden');
+    document.getElementById('global-alert-text').textContent =
+      urgent.length === 1
+        ? `${urgent[0].name} está no prazo de recomprar.`
+        : `${urgent.map(u=>u.name).join(', ')} estão no prazo de recomprar.`;
+  } else {
+    banner.classList.add('hidden');
+    bell.classList.add('hidden');
+  }
+
+  bindReminderEvents();
+  renderIcons();
+}
+
+function bindReminderEvents(){
+  document.querySelectorAll('[data-cycle]').forEach(el=>{
+    el.addEventListener('change', e=>{
+      const id = Number(e.target.dataset.cycle);
+      const r = reminders.find(x=>x.id===id);
+      r.cycleDays = Number(e.target.value);
+      renderReminders();
+      showToast(`Ciclo de "${r.name}" atualizado`, 'refresh-cw');
+    });
+  });
+  document.querySelectorAll('[data-lastpurchase]').forEach(el=>{
+    el.addEventListener('change', e=>{
+      const id = Number(e.target.dataset.lastpurchase);
+      const r = reminders.find(x=>x.id===id);
+      r.lastPurchase = e.target.value;
+      renderReminders();
+      showToast(`Data de compra de "${r.name}" atualizada`, 'calendar');
+    });
+  });
+  document.querySelectorAll('[data-bought]').forEach(el=>{
+    el.addEventListener('click', e=>{
+      const id = Number(e.currentTarget.dataset.bought);
+      const r = reminders.find(x=>x.id===id);
+      r.lastPurchase = todayISO();
+      renderReminders();
+      showToast(`"${r.name}" marcado como comprado hoje 🎉`);
+    });
+  });
+  document.querySelectorAll('[data-buy]').forEach(el=>{
+    el.addEventListener('click', e=>{
+      const id = Number(e.currentTarget.dataset.buy);
+      const r = reminders.find(x=>x.id===id);
+      showToast(`Redirecionando para comprar "${r.name}"...`, 'external-link');
+    });
+  });
+}
+
+/* Add new reminder */
+document.getElementById('btn-open-add').addEventListener('click', ()=>{
+  document.getElementById('new-date').value = todayISO();
+  document.getElementById('add-form').classList.toggle('hidden');
+});
+document.getElementById('btn-cancel-add').addEventListener('click', ()=>{
+  document.getElementById('add-form').classList.add('hidden');
+});
+document.getElementById('btn-save-add').addEventListener('click', ()=>{
+  const name = document.getElementById('new-name').value.trim();
+  const cycle = Number(document.getElementById('new-cycle').value);
+  const date = document.getElementById('new-date').value || todayISO();
+  if (!name){ showToast('Digite o nome do produto', 'alert-circle'); return; }
+  reminders.push({ id: Date.now(), name, icon: 'package', cycleDays: cycle, lastPurchase: date, link: 'https://loja.exemplo.com/busca?q=' + encodeURIComponent(name) });
+  document.getElementById('new-name').value = '';
+  document.getElementById('add-form').classList.add('hidden');
+  renderReminders();
+  showToast(`"${name}" adicionado aos lembretes`, 'plus-circle');
+});
+
+/* ==================================================================
+   RENDER: ARTICLES
+================================================================== */
+const articleCategories = ['Todos', ...new Set(articles.map(a=>a.phase))];
+let activeArticleCat = 'Todos';
+
+function renderArticleFilters(){
+  const wrap = document.getElementById('article-filters');
+  wrap.innerHTML = articleCategories.map(c => `
+    <button data-cat="${c}" class="art-chip text-xs font-medium px-3.5 py-1.5 rounded-full border border-rose-100 ${c===activeArticleCat?'chip-active':'bg-white text-ink/60 hover:bg-rose-50'} transition">${c}</button>
+  `).join('');
+  wrap.querySelectorAll('[data-cat]').forEach(b=>{
+    b.addEventListener('click', ()=>{ activeArticleCat = b.dataset.cat; renderArticleFilters(); renderArticles(); });
+  });
+}
+
+function articleCard(a){
+  return `
+  <div data-article="${a.id}" class="art-card cursor-pointer rounded-2xl bg-white shadow-soft p-5 hover:shadow-card transition flex flex-col gap-3">
+    <span class="self-start text-[11px] font-semibold text-sky-700 bg-sky-50 px-2.5 py-1 rounded-full">${a.phase}</span>
+    <h3 class="font-display text-lg leading-snug">${a.title}</h3>
+    <p class="text-xs text-ink/55 leading-relaxed">${a.excerpt}</p>
+    <div class="flex items-center gap-1.5 text-[11px] text-ink/40 mt-auto pt-1">
+      <i data-icon="clock" style="width:12px;height:12px"></i> ${a.read} de leitura
+    </div>
+  </div>`;
+}
+
+function renderArticles(){
+  const q = document.getElementById('article-search').value.toLowerCase().trim();
+  const filtered = articles.filter(a => {
+    const matchCat = activeArticleCat === 'Todos' || a.phase === activeArticleCat;
+    const matchQ = !q || a.title.toLowerCase().includes(q) || a.excerpt.toLowerCase().includes(q);
+    return matchCat && matchQ;
+  });
+  const grid = document.getElementById('articles-grid');
+  grid.innerHTML = filtered.map(articleCard).join('');
+  document.getElementById('articles-empty').classList.toggle('hidden', filtered.length>0);
+
+  // home preview: current phase (3-6 meses) first
+  const preview = document.getElementById('home-articles-preview');
+  const previewList = [...articles].sort((a,b)=> (a.phase===currentPhase?-1:1) - (b.phase===currentPhase?-1:1));
+  preview.innerHTML = previewList.slice(0,3).map(articleCard).join('');
+
+  bindArticleEvents();
+  renderIcons();
+}
+
+function bindArticleEvents(){
+  document.querySelectorAll('[data-article]').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      const a = articles.find(x=>x.id===Number(el.dataset.article));
+      document.getElementById('modal-category').textContent = a.phase;
+      document.getElementById('modal-title').textContent = a.title;
+      document.getElementById('modal-read').textContent = a.read + ' de leitura';
+      document.getElementById('modal-content').textContent = a.content;
+      document.getElementById('article-modal').classList.remove('hidden');
+    });
+  });
+}
+document.getElementById('article-modal-close').addEventListener('click', ()=> document.getElementById('article-modal').classList.add('hidden'));
+document.getElementById('article-modal-backdrop').addEventListener('click', ()=> document.getElementById('article-modal').classList.add('hidden'));
+document.getElementById('article-search').addEventListener('input', renderArticles);
+
+/* ==================================================================
+   RENDER: PRODUCTS
+================================================================== */
+const productCategories = ['Todos', ...new Set(products.map(p=>p.phase))];
+let activeProductCat = 'Todos';
+
+function renderProductFilters(){
+  const wrap = document.getElementById('product-filters');
+  wrap.innerHTML = productCategories.map(c => `
+    <button data-pcat="${c}" class="prod-chip text-xs font-medium px-3.5 py-1.5 rounded-full border border-rose-100 ${c===activeProductCat?'chip-active':'bg-white text-ink/60 hover:bg-rose-50'} transition">${c}</button>
+  `).join('');
+  wrap.querySelectorAll('[data-pcat]').forEach(b=>{
+    b.addEventListener('click', ()=>{ activeProductCat = b.dataset.pcat; renderProductFilters(); renderProducts(); });
+  });
+}
+
+function renderProducts(){
+  const filtered = activeProductCat==='Todos' ? products : products.filter(p=>p.phase===activeProductCat);
+  const grid = document.getElementById('products-grid');
+  grid.innerHTML = filtered.map((p, i) => `
+    <div class="product-card reveal rounded-2xl bg-white shadow-soft overflow-hidden hover:shadow-card flex flex-col" style="transition-delay:${Math.min(i,6)*90}ms">
+      <div class="h-32 ${p.color} flex items-center justify-center relative">
+        <i data-icon="${fa(p.icon)}" class="text-ink/40" style="width:34px;height:34px"></i>
+        ${i===0 ? `<span class="badge-pulse absolute top-3 right-3 text-[10px] font-semibold bg-white text-rose-600 px-2.5 py-1 rounded-full">Mais procurado</span>` : ''}
+      </div>
+      <div class="p-5 flex flex-col gap-2 flex-1">
+        <span class="text-[11px] font-semibold text-sky-700">${p.phase}</span>
+        <h3 class="font-semibold text-sm leading-snug">${p.name}</h3>
+        <p class="text-xs text-ink/50 leading-relaxed flex-1">${p.desc}</p>
+        <div class="flex items-center justify-between pt-2">
+          <span class="font-display text-lg text-ink">${p.price}</span>
+          <a href="${p.link}" target="_blank" class="text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 px-4 py-2 rounded-full transition">Comprar na Loja</a>
+        </div>
+      </div>
+    </div>
+  `).join('');
+  renderIcons();
+  observeReveals();
+}
+
+/* ==================================================================
+   RENDER: FAQ + SUPPORT
+================================================================== */
+function renderFaq(){
+  const wrap = document.getElementById('faq-list');
+  wrap.innerHTML = faqs.map((f,i) => `
+    <div class="rounded-2xl bg-white shadow-soft overflow-hidden">
+      <button data-faq="${i}" class="faq-btn w-full flex items-center justify-between gap-3 px-5 py-4 text-left">
+        <span class="text-sm font-medium">${f.q}</span>
+        <i data-icon="chevron-down" class="faq-icon shrink-0 text-ink/40 transition-transform" style="width:16px;height:16px"></i>
+      </button>
+      <div class="faq-panel hidden px-5 pb-4 text-xs text-ink/55 leading-relaxed">${f.a}</div>
+    </div>
+  `).join('');
+  document.querySelectorAll('[data-faq]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const panel = btn.nextElementSibling;
+      const icon = btn.querySelector('.faq-icon');
+      panel.classList.toggle('hidden');
+      icon.style.transform = panel.classList.contains('hidden') ? 'rotate(0deg)' : 'rotate(180deg)';
+    });
+  });
+  renderIcons();
+}
+
+/* ==================================================================
+   INIT
+================================================================== */
+function init(){
+  document.getElementById('whatsapp-float').href = waLink;
+  document.getElementById('support-whatsapp-link').href = waLink;
+
+  applyProfile();
+  renderNav();
+  renderReminders();
+  renderArticleFilters();
+  renderArticles();
+  renderProductFilters();
+  renderProducts();
+  renderFaq();
+  renderIcons();
+
+  if (!profile) openProfileModal();
+}
+init();
+</script>
+</body>
+</html>
