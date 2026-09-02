@@ -73,6 +73,10 @@
     0%, 100% { box-shadow: 0 0 0 0 rgba(222,120,133,0.35); }
     50% { box-shadow: 0 0 0 6px rgba(222,120,133,0); }
   }
+
+  /* ---- Slogan animado, em looping, no topo esquerdo ---- */
+  .tagline-cycle { transition: opacity 0.5s ease; opacity: 1; }
+  .tagline-cycle.tagline-hidden { opacity: 0; }
 </style>
 </head>
 <body class="text-ink antialiased">
@@ -88,7 +92,7 @@
       </div>
       <div>
         <p class="font-display text-xl leading-none text-ink">Casu</p>
-        <p class="text-[11px] text-ink/50 mt-0.5 tracking-wide">cuidado que não falha</p>
+        <p id="tagline-desktop" class="tagline-cycle text-[11px] text-ink/50 mt-0.5 tracking-wide">cuidado que não falha</p>
       </div>
     </div>
 
@@ -111,11 +115,14 @@
         <div class="w-8 h-8 rounded-full bg-rose-200 flex items-center justify-center">
           <i data-icon="feather" class="text-rose-700" style="width:16px;height:16px"></i>
         </div>
-        <span class="font-display text-lg">Casu</span>
+        <div class="leading-tight">
+          <span class="font-display text-lg block">Casu</span>
+          <span id="tagline-mobile" class="tagline-cycle text-[10px] text-ink/45 tracking-wide block">cuidado que não falha</span>
+        </div>
       </div>
       <div class="flex items-center gap-2">
         <button id="profile-box-mobile" class="w-9 h-9 rounded-full bg-white shadow-soft flex items-center justify-center">
-          <i data-icon="baby" class="text-ink/70" style="width:16px;height:16px"></i>
+          <i data-icon="pacifier" class="text-ink/70" style="width:17px;height:17px"></i>
         </button>
         <button id="alert-bell" class="relative w-9 h-9 rounded-full bg-white shadow-soft flex items-center justify-center">
           <i data-icon="bell" class="text-ink/70" style="width:17px;height:17px"></i>
@@ -165,6 +172,7 @@
             <p class="text-xs text-ink/50 mt-1">Fase do bebê</p>
           </div>
         </div>
+        <p id="stats-empty-hint" class="hidden -mt-7 mb-10 text-xs text-ink/45">Os números acima vão aparecer assim que você cadastrar seus primeiros itens em <button data-nav="lembretes" class="text-rose-600 font-semibold underline">Lembretes</button>.</p>
 
         <!-- Lembretes preview -->
         <div class="flex items-center justify-between mb-4">
@@ -265,6 +273,7 @@
             <input id="login-email" type="email" required placeholder="Seu e-mail" class="border border-rose-100 rounded-xl px-4 py-3 text-sm focus-ring focus:border-rose-300" />
             <input id="login-password" type="password" required placeholder="Sua senha" class="border border-rose-100 rounded-xl px-4 py-3 text-sm focus-ring focus:border-rose-300" />
             <button type="submit" class="bg-rose-600 hover:bg-rose-700 text-white rounded-full py-3 text-sm font-semibold transition">Entrar</button>
+            <button type="button" id="link-forgot" class="text-xs text-ink/50 hover:text-rose-600 underline self-center mt-1">Esqueci minha senha</button>
           </form>
 
           <form id="form-signup" class="hidden flex flex-col gap-3">
@@ -275,6 +284,19 @@
               Quero receber novidades, dicas e promoções da Casu por e-mail
             </label>
             <button type="submit" class="bg-rose-600 hover:bg-rose-700 text-white rounded-full py-3 text-sm font-semibold transition">Criar conta</button>
+          </form>
+
+          <form id="form-forgot" class="hidden flex flex-col gap-3">
+            <p class="text-xs text-ink/55 px-1">Digite seu e-mail e a gente manda um link para você criar uma nova senha.</p>
+            <input id="forgot-email" type="email" required placeholder="Seu e-mail" class="border border-rose-100 rounded-xl px-4 py-3 text-sm focus-ring focus:border-rose-300" />
+            <button type="submit" class="bg-rose-600 hover:bg-rose-700 text-white rounded-full py-3 text-sm font-semibold transition">Enviar link de redefinição</button>
+            <button type="button" id="link-back-to-login" class="text-xs text-ink/50 hover:text-rose-600 underline self-center mt-1">Voltar para o login</button>
+          </form>
+
+          <form id="form-reset-password" class="hidden flex flex-col gap-3">
+            <p class="text-xs text-ink/55 px-1">Você veio de um link de redefinição — escolha sua nova senha.</p>
+            <input id="reset-password-new" type="password" required minlength="6" placeholder="Nova senha (mín. 6 caracteres)" class="border border-rose-100 rounded-xl px-4 py-3 text-sm focus-ring focus:border-rose-300" />
+            <button type="submit" class="bg-rose-600 hover:bg-rose-700 text-white rounded-full py-3 text-sm font-semibold transition">Salvar nova senha</button>
           </form>
         </div>
 
@@ -366,7 +388,7 @@
   <div class="absolute inset-0 bg-ink/40 backdrop-blur-sm"></div>
   <div class="relative bg-cream w-full md:max-w-sm md:rounded-3xl rounded-t-3xl p-6 md:p-8 shadow-card">
     <div class="w-11 h-11 rounded-full bg-rose-200 flex items-center justify-center mb-4">
-      <i data-icon="baby" class="text-rose-700" style="width:20px;height:20px"></i>
+      <i data-icon="pacifier" class="text-rose-700" style="width:20px;height:20px"></i>
     </div>
     <h2 class="font-display text-2xl mb-1">Conte sobre o seu bebê</h2>
     <p class="text-sm text-ink/55 mb-5">Assim a gente personaliza dicas, produtos e lembretes pra fase certa.</p>
@@ -442,6 +464,7 @@ const ICONS = {
   'feather': '<path d="M20 4L9 15"/><path d="M20 4c-6.3 0-14.3 3-16 11 3 1.2 7.3 0 9.3-2"/><path d="M9 15l-5 5"/>',
   'user': '<circle cx="12" cy="8" r="4"/><path d="M5 21c0-4.4 3.1-7 7-7s7 2.6 7 7"/>',
   'log-out': '<path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/>',
+  'pacifier': '<circle cx="12" cy="9" r="5"/><path d="M8 9a4 4 0 008 0"/><rect x="9.5" y="14" width="5" height="3.2" rx="1.5"/><path d="M9 17.3c-.2 1.7 1 3 3 3s3.2-1.3 3-3"/>',
 };
 
 /* ==================================================================
@@ -478,6 +501,26 @@ function renderIcons(){
 }
 
 /* ==================================================================
+   SLOGAN ANIMADO — frases alternando em loop, com fade suave
+================================================================== */
+const TAGLINES = [
+  'cuidado que não falha',
+  'feito pra você e seu bebê',
+  'do jeitinho que vocês precisam',
+];
+let taglineIndex = 0;
+function cycleTagline(){
+  const els = document.querySelectorAll('.tagline-cycle');
+  els.forEach(el => el.classList.add('tagline-hidden'));
+  setTimeout(()=>{
+    taglineIndex = (taglineIndex + 1) % TAGLINES.length;
+    els.forEach(el => { el.textContent = TAGLINES[taglineIndex]; });
+    els.forEach(el => el.classList.remove('tagline-hidden'));
+  }, 500);
+}
+setInterval(cycleTagline, 3400);
+
+/* ==================================================================
    MOCK DATA
 ================================================================== */
 const NAV_ITEMS = [
@@ -500,7 +543,10 @@ function mlSearchLink(name){
 }
 const REAL_ML_LINK = 'https://www.mercadolivre.com.br/up/MLBU3763087831?matt_tool=38524122&pdp_filters=item_id:MLB4455644655&ua=Z71G-cEmvxbYQwudcWrGI2goVDPyXoI4uoGn58TWoFYBgEw#origin=share&sid=share&wid=MLB4455644655&action=copy';
 
-let reminders = [
+// Nenhum item cadastrado por padrão — assim a tela nasce limpa para uso real.
+// Os exemplos abaixo ficam disponíveis via botão "Ver um exemplo" na tela vazia.
+let reminders = [];
+const EXAMPLE_REMINDERS = [
   { id: 1, name: 'Fraldas P',              icon: 'baby',        cycleDays: 15, lastPurchase: daysAgo(14), link: REAL_ML_LINK },
   { id: 2, name: 'Lenços umedecidos',      icon: 'droplets',    cycleDays: 30, lastPurchase: daysAgo(20), link: mlSearchLink('Lenços umedecidos') },
   { id: 3, name: 'Pomada para assaduras',  icon: 'heart-pulse', cycleDays: 45, lastPurchase: daysAgo(10), link: mlSearchLink('Pomada para assaduras') },
@@ -669,6 +715,8 @@ const sb = (window.supabase && window.supabase.createClient)
 function setAuthMode(mode){
   document.getElementById('form-login').classList.toggle('hidden', mode !== 'login');
   document.getElementById('form-signup').classList.toggle('hidden', mode !== 'signup');
+  document.getElementById('form-forgot').classList.add('hidden');
+  document.getElementById('form-reset-password').classList.add('hidden');
   document.getElementById('tab-login').className = `flex-1 text-sm font-semibold py-2 rounded-full transition ${mode==='login' ? 'bg-ink text-cream' : 'text-ink/50'}`;
   document.getElementById('tab-signup').className = `flex-1 text-sm font-semibold py-2 rounded-full transition ${mode==='signup' ? 'bg-ink text-cream' : 'text-ink/50'}`;
   hideAuthMessages();
@@ -734,10 +782,45 @@ async function handleLogout(){
   renderConta();
 }
 
+async function handleForgot(e){
+  e.preventDefault();
+  if (!sb){ showAuthError('Esse recurso só funciona no site publicado, não aqui no preview.'); return; }
+  const email = document.getElementById('forgot-email').value.trim();
+  const { error } = await sb.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.origin + window.location.pathname,
+  });
+  if (error) { showAuthError(traduzErroAuth(error.message)); return; }
+  showAuthSuccess('Te mandamos um e-mail com o link pra criar uma nova senha. Confira sua caixa de entrada (e o spam).');
+  e.target.reset();
+}
+
+async function handleResetPassword(e){
+  e.preventDefault();
+  const newPassword = document.getElementById('reset-password-new').value;
+  const { error } = await sb.auth.updateUser({ password: newPassword });
+  if (error) { showAuthError(traduzErroAuth(error.message)); return; }
+  inPasswordRecovery = false;
+  showAuthSuccess('Senha atualizada! Você já pode entrar com a nova senha.');
+  document.getElementById('form-reset-password').classList.add('hidden');
+  setTimeout(()=> { setAuthMode('login'); renderConta(); }, 1800);
+}
+
+let inPasswordRecovery = false;
+
 async function renderConta(){
   const loading = document.getElementById('conta-loading');
   const authBox = document.getElementById('conta-auth');
   const dash = document.getElementById('conta-dashboard');
+
+  if (inPasswordRecovery){
+    loading.classList.add('hidden');
+    dash.classList.add('hidden');
+    authBox.classList.remove('hidden');
+    ['form-login','form-signup','form-forgot'].forEach(id => document.getElementById(id).classList.add('hidden'));
+    document.getElementById('form-reset-password').classList.remove('hidden');
+    return;
+  }
+
   authBox.classList.add('hidden');
   dash.classList.add('hidden');
   loading.classList.remove('hidden');
@@ -786,10 +869,25 @@ document.getElementById('tab-login').addEventListener('click', ()=> setAuthMode(
 document.getElementById('tab-signup').addEventListener('click', ()=> setAuthMode('signup'));
 document.getElementById('form-login').addEventListener('submit', handleLogin);
 document.getElementById('form-signup').addEventListener('submit', handleSignup);
+document.getElementById('form-forgot').addEventListener('submit', handleForgot);
+document.getElementById('form-reset-password').addEventListener('submit', handleResetPassword);
 document.getElementById('btn-logout').addEventListener('click', handleLogout);
+document.getElementById('link-forgot').addEventListener('click', ()=>{
+  document.getElementById('form-login').classList.add('hidden');
+  document.getElementById('form-forgot').classList.remove('hidden');
+  hideAuthMessages();
+});
+document.getElementById('link-back-to-login').addEventListener('click', ()=> setAuthMode('login'));
 
 if (sb){
-  sb.auth.onAuthStateChange(()=>{ if (currentView === 'conta') renderConta(); });
+  sb.auth.onAuthStateChange((event)=>{
+    if (event === 'PASSWORD_RECOVERY'){
+      inPasswordRecovery = true;
+      switchView('conta');
+      return;
+    }
+    if (currentView === 'conta') renderConta();
+  });
 }
 
 /* ==================================================================
@@ -874,11 +972,33 @@ function reminderCard(r, compact=false){
 
 function renderReminders(){
   const grid = document.getElementById('reminders-grid');
-  grid.innerHTML = reminders.map(r => reminderCard(r, false)).join('');
-
   const preview = document.getElementById('home-reminders-preview');
-  const sorted = [...reminders].sort((a,b)=> reminderStatus(a).daysRemaining - reminderStatus(b).daysRemaining);
-  preview.innerHTML = sorted.slice(0,3).map(r => reminderCard(r, true)).join('');
+
+  if (reminders.length === 0){
+    grid.innerHTML = `
+      <div class="sm:col-span-2 lg:col-span-3 rounded-2xl border-2 border-dashed border-rose-200 bg-white/60 flex flex-col items-center text-center gap-3 px-6 py-12">
+        <div class="w-12 h-12 rounded-full bg-rose-100 flex items-center justify-center">
+          <i data-icon="bell" class="text-rose-600" style="width:20px;height:20px"></i>
+        </div>
+        <p class="font-semibold text-sm text-ink">Nenhum item cadastrado ainda</p>
+        <p class="text-xs text-ink/50 max-w-xs">Adicione o primeiro produto de reabastecimento (fraldas, lenços, fórmula...) para começar a acompanhar o estoque.</p>
+        <div class="flex items-center gap-2 mt-1">
+          <button id="empty-add-btn" class="text-xs font-semibold bg-rose-600 text-white px-4 py-2 rounded-full hover:bg-rose-700 transition">Adicionar item</button>
+          <button id="empty-example-btn" class="text-xs font-semibold border border-rose-200 text-ink/60 px-4 py-2 rounded-full hover:bg-rose-50 transition">Ver um exemplo</button>
+        </div>
+      </div>`;
+    preview.innerHTML = `
+      <div class="sm:col-span-2 lg:col-span-3 rounded-2xl bg-white shadow-soft flex items-center gap-3 px-5 py-5">
+        <div class="w-9 h-9 rounded-full bg-rose-100 flex items-center justify-center shrink-0">
+          <i data-icon="bell" class="text-rose-600" style="width:16px;height:16px"></i>
+        </div>
+        <p class="text-xs text-ink/55">Você ainda não tem itens de reabastecimento. <button data-nav="lembretes" class="text-rose-600 font-semibold underline">Adicionar agora</button></p>
+      </div>`;
+  } else {
+    grid.innerHTML = reminders.map(r => reminderCard(r, false)).join('');
+    const sorted = [...reminders].sort((a,b)=> reminderStatus(a).daysRemaining - reminderStatus(b).daysRemaining);
+    preview.innerHTML = sorted.slice(0,3).map(r => reminderCard(r, true)).join('');
+  }
 
   // stats
   let suf=0, acab=0, urg=0;
@@ -889,6 +1009,8 @@ function renderReminders(){
   document.getElementById('stat-suf').textContent = suf;
   document.getElementById('stat-acab').textContent = acab;
   document.getElementById('stat-urg').textContent = urg;
+  const statsHint = document.getElementById('stats-empty-hint');
+  if (statsHint) statsHint.classList.toggle('hidden', reminders.length > 0);
 
   // global alert
   const urgent = reminders.filter(r => reminderStatus(r).status === 'Reabastecer Agora');
@@ -907,6 +1029,20 @@ function renderReminders(){
   }
 
   bindReminderEvents();
+  document.querySelectorAll('[data-nav]').forEach(btn=>{
+    btn.addEventListener('click', ()=> switchView(btn.dataset.nav));
+  });
+  const emptyAddBtn = document.getElementById('empty-add-btn');
+  if (emptyAddBtn) emptyAddBtn.addEventListener('click', ()=>{
+    document.getElementById('new-date').value = todayISO();
+    document.getElementById('add-form').classList.remove('hidden');
+  });
+  const emptyExampleBtn = document.getElementById('empty-example-btn');
+  if (emptyExampleBtn) emptyExampleBtn.addEventListener('click', ()=>{
+    reminders = EXAMPLE_REMINDERS.map(r => ({...r}));
+    renderReminders();
+    showToast('Exemplos carregados — edite ou remova como quiser');
+  });
   renderIcons();
 }
 
