@@ -383,6 +383,18 @@
   </div>
 </div>
 
+<!-- ============ IMAGE LIGHTBOX (foto do produto em tela cheia) ============ -->
+<div id="image-modal" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-4">
+  <div id="image-modal-backdrop" class="absolute inset-0 bg-ink/85 backdrop-blur-sm"></div>
+  <button id="image-modal-close" class="absolute top-5 right-5 z-10 w-9 h-9 rounded-full bg-white flex items-center justify-center hover:bg-rose-50">
+    <i data-icon="xmark" style="width:17px;height:17px"></i>
+  </button>
+  <div class="relative max-w-2xl w-full flex flex-col items-center gap-3">
+    <img id="image-modal-img" src="" alt="" class="max-h-[75vh] w-auto max-w-full object-contain rounded-2xl bg-white shadow-card" />
+    <p id="image-modal-caption" class="text-cream text-sm font-medium text-center px-4"></p>
+  </div>
+</div>
+
 <!-- ============ PROFILE MODAL (cada visitante configura o próprio bebê) ============ -->
 <div id="profile-modal" class="hidden fixed inset-0 z-50 flex items-end md:items-center justify-center">
   <div class="absolute inset-0 bg-ink/40 backdrop-blur-sm"></div>
@@ -1188,7 +1200,7 @@ function renderProducts(){
   const grid = document.getElementById('products-grid');
   grid.innerHTML = filtered.map((p, i) => `
     <div class="product-card reveal rounded-2xl bg-white shadow-soft overflow-hidden hover:shadow-card flex flex-col" style="transition-delay:${Math.min(i,6)*90}ms">
-      <div class="h-40 bg-sand/60 flex items-center justify-center relative p-3">
+      <div data-zoom="${p.id}" class="h-40 bg-sand/60 flex items-center justify-center relative p-3 cursor-zoom-in">
         <img src="${p.img}" alt="${p.name}" class="max-h-full max-w-full object-contain" loading="lazy" />
         ${i===0 ? `<span class="badge-pulse absolute top-3 right-3 text-[10px] font-semibold bg-white text-rose-600 px-2.5 py-1 rounded-full">Mais procurado</span>` : ''}
       </div>
@@ -1202,7 +1214,28 @@ function renderProducts(){
   `).join('');
   renderIcons();
   observeReveals();
+  bindProductZoom(filtered);
 }
+
+function bindProductZoom(list){
+  document.querySelectorAll('[data-zoom]').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      const p = list.find(x => String(x.id) === el.dataset.zoom);
+      if (!p) return;
+      document.getElementById('image-modal-img').src = p.img;
+      document.getElementById('image-modal-img').alt = p.name;
+      document.getElementById('image-modal-caption').textContent = p.name;
+      document.getElementById('image-modal').classList.remove('hidden');
+    });
+  });
+}
+function closeImageModal(){
+  document.getElementById('image-modal').classList.add('hidden');
+  document.getElementById('image-modal-img').src = '';
+}
+document.getElementById('image-modal-close').addEventListener('click', closeImageModal);
+document.getElementById('image-modal-backdrop').addEventListener('click', closeImageModal);
+
 
 /* ==================================================================
    RENDER: FAQ + SUPPORT
