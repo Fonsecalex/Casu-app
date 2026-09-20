@@ -86,14 +86,19 @@
 
   <!-- ============ SIDEBAR (desktop) ============ -->
   <aside class="hidden md:flex md:w-64 lg:w-72 shrink-0 flex-col border-r border-rose-100 bg-white/70 backdrop-blur px-6 py-8 sticky top-0 h-screen">
-    <div class="flex items-center gap-2.5 mb-10 px-1">
-      <div class="w-9 h-9 rounded-full bg-rose-200 flex items-center justify-center shrink-0">
-        <i data-icon="feather" class="w-4.5 h-4.5 text-rose-700" style="width:18px;height:18px"></i>
+    <div class="flex items-center gap-2.5 mb-10 px-1 justify-between">
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-full bg-rose-200 flex items-center justify-center shrink-0">
+          <i data-icon="feather" class="w-4.5 h-4.5 text-rose-700" style="width:18px;height:18px"></i>
+        </div>
+        <div>
+          <p class="font-display text-xl leading-none text-ink">Casu</p>
+          <p id="tagline-desktop" class="tagline-cycle text-[11px] text-ink/50 mt-0.5 tracking-wide">cuidado que não falha</p>
+        </div>
       </div>
-      <div>
-        <p class="font-display text-xl leading-none text-ink">Casu</p>
-        <p id="tagline-desktop" class="tagline-cycle text-[11px] text-ink/50 mt-0.5 tracking-wide">cuidado que não falha</p>
-      </div>
+      <button id="stories-btn-desktop" title="Histórias para dormir" class="w-9 h-9 rounded-full bg-sky-50 hover:bg-sky-100 flex items-center justify-center shrink-0 transition">
+        <i data-icon="book-open" class="text-sky-700" style="width:16px;height:16px"></i>
+      </button>
     </div>
 
     <nav class="flex flex-col gap-1" id="nav-desktop"></nav>
@@ -124,9 +129,8 @@
         <button id="profile-box-mobile" class="w-9 h-9 rounded-full bg-white shadow-soft flex items-center justify-center">
           <i data-icon="pacifier" class="text-ink/70" style="width:17px;height:17px"></i>
         </button>
-        <button id="alert-bell" class="relative w-9 h-9 rounded-full bg-white shadow-soft flex items-center justify-center">
-          <i data-icon="bell" class="text-ink/70" style="width:17px;height:17px"></i>
-          <span id="bell-dot" class="hidden absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-rose-500 border-2 border-cream"></span>
+        <button id="stories-btn" title="Histórias para dormir" class="relative w-9 h-9 rounded-full bg-white shadow-soft flex items-center justify-center">
+          <i data-icon="book-open" class="text-ink/70" style="width:17px;height:17px"></i>
         </button>
       </div>
     </header>
@@ -234,11 +238,7 @@
           <p class="font-semibold text-sm mb-4">Adicionar novo item de reabastecimento</p>
           <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
             <input id="new-name" placeholder="Nome do produto" class="border border-rose-100 rounded-xl px-3.5 py-2.5 text-sm focus-ring focus:border-rose-300" />
-            <select id="new-cycle" class="border border-rose-100 rounded-xl px-3.5 py-2.5 text-sm focus-ring focus:border-rose-300">
-              <option value="15">Ciclo: a cada 15 dias</option>
-              <option value="30" selected>Ciclo: a cada 30 dias</option>
-              <option value="45">Ciclo: a cada 45 dias</option>
-            </select>
+            <input id="new-cycle" type="number" min="1" max="365" value="30" placeholder="Ciclo (dias)" class="border border-rose-100 rounded-xl px-3.5 py-2.5 text-sm focus-ring focus:border-rose-300" />
             <input id="new-date" type="date" class="border border-rose-100 rounded-xl px-3.5 py-2.5 text-sm focus-ring focus:border-rose-300" />
             <div class="flex gap-2">
               <button id="btn-save-add" class="flex-1 bg-rose-600 text-white rounded-xl text-sm font-semibold hover:bg-rose-700 transition">Salvar</button>
@@ -279,9 +279,14 @@
           <form id="form-signup" class="hidden flex flex-col gap-3">
             <input id="signup-email" type="email" required placeholder="Seu e-mail" class="border border-rose-100 rounded-xl px-4 py-3 text-sm focus-ring focus:border-rose-300" />
             <input id="signup-password" type="password" required minlength="6" placeholder="Crie uma senha (mín. 6 caracteres)" class="border border-rose-100 rounded-xl px-4 py-3 text-sm focus-ring focus:border-rose-300" />
+            <input id="signup-whatsapp" type="tel" placeholder="WhatsApp (opcional) — ex: (11) 91234-5678" class="border border-rose-100 rounded-xl px-4 py-3 text-sm focus-ring focus:border-rose-300" />
             <label class="flex items-start gap-2 text-xs text-ink/60 px-1">
               <input id="signup-optin" type="checkbox" checked class="mt-0.5" />
               Quero receber novidades, dicas e promoções da Casu por e-mail
+            </label>
+            <label class="flex items-start gap-2 text-xs text-ink/60 px-1">
+              <input id="signup-terms" type="checkbox" required class="mt-0.5" />
+              Li e aceito os <button type="button" id="open-terms" class="text-rose-600 font-semibold underline">Termos de Uso e Política de Privacidade</button>
             </label>
             <button type="submit" class="bg-rose-600 hover:bg-rose-700 text-white rounded-full py-3 text-sm font-semibold transition">Criar conta</button>
           </form>
@@ -304,7 +309,7 @@
         <div id="conta-dashboard" class="hidden max-w-2xl">
           <div class="flex items-center justify-between mb-6 gap-3">
             <div class="min-w-0">
-              <p class="text-sm text-rose-600 font-medium">Conta logada</p>
+              <p class="text-sm text-rose-600 font-medium">Login realizado</p>
               <h1 id="conta-email" class="font-display text-xl md:text-2xl text-ink truncate"></h1>
             </div>
             <button id="btn-logout" class="shrink-0 flex items-center gap-1.5 text-xs font-semibold border border-rose-100 rounded-full px-4 py-2.5 hover:bg-rose-50 transition">
@@ -312,14 +317,32 @@
             </button>
           </div>
 
-          <div class="rounded-2xl bg-sage-100 px-5 py-4 mb-8 text-sm text-sage-600">
+          <div class="rounded-2xl bg-sage-100 px-5 py-4 mb-4 text-sm text-sage-600">
             Novidades por e-mail: <span id="conta-optin-status" class="font-semibold"></span>
+          </div>
+
+          <div class="rounded-2xl bg-white shadow-soft px-5 py-4 mb-8">
+            <label class="text-xs font-semibold text-ink/60 mb-2 block">Seu WhatsApp (opcional)</label>
+            <div class="flex gap-2">
+              <input id="conta-whatsapp" type="tel" placeholder="(11) 91234-5678" class="flex-1 border border-rose-100 rounded-xl px-3.5 py-2.5 text-sm focus-ring focus:border-rose-300" />
+              <button id="btn-save-whatsapp" class="shrink-0 text-xs font-semibold bg-ink text-cream px-4 py-2.5 rounded-full hover:bg-ink/85 transition">Salvar</button>
+            </div>
+            <p class="text-[11px] text-ink/40 mt-2">Uma forma a mais da Casu falar com você, além do e-mail.</p>
           </div>
 
           <h2 class="font-display text-xl mb-3">Meus pedidos</h2>
           <div id="conta-orders" class="space-y-3"></div>
           <p id="conta-orders-empty" class="hidden text-sm text-ink/40 py-10 text-center">Você ainda não tem pedidos por aqui.</p>
         </div>
+      </section>
+
+      <!-- ===================== VIEW: HISTÓRIAS ===================== -->
+      <section id="view-historias" class="view hidden">
+        <div class="mb-6">
+          <h1 class="font-display text-3xl text-ink mb-1">Histórias para Dormir</h1>
+          <p class="text-ink/55 text-sm">Histórias curtas e calmas pra ler junto com o seu bebê, com música suave pra acompanhar.</p>
+        </div>
+        <div id="historias-grid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
       </section>
 
       <!-- ===================== VIEW: SUPORTE ===================== -->
@@ -329,7 +352,7 @@
           <p class="text-ink/55 text-sm">Estamos por perto. Fala com a gente quando precisar.</p>
         </div>
 
-        <div class="grid md:grid-cols-2 gap-5 mb-10">
+        <div class="grid md:grid-cols-3 gap-5 mb-10">
           <div class="rounded-3xl bg-sage-100 p-6 md:p-7">
             <div class="w-11 h-11 rounded-full bg-white flex items-center justify-center mb-4">
               <i data-icon="comment-dots" class="text-sage-600" style="width:20px;height:20px"></i>
@@ -350,6 +373,16 @@
               <i data-icon="envelope" style="width:15px;height:15px"></i> casuloja@outlook.com
             </a>
           </div>
+          <div class="rounded-3xl bg-rose-100 p-6 md:p-7">
+            <div class="w-11 h-11 rounded-full bg-white flex items-center justify-center mb-4">
+              <i data-icon="instagram" class="text-rose-700" style="width:20px;height:20px"></i>
+            </div>
+            <h3 class="font-display text-xl mb-1.5">Segue a gente</h3>
+            <p class="text-sm text-ink/60 mb-5">Dicas, novidades e bastidores da Casu no Instagram.</p>
+            <a id="support-instagram-link" href="#" target="_blank" class="inline-flex items-center gap-2 bg-rose-600 text-white px-5 py-2.5 rounded-full text-sm font-semibold hover:bg-rose-700 transition">
+              <i data-icon="instagram" style="width:15px;height:15px"></i> @casu_loja
+            </a>
+          </div>
         </div>
 
         <h2 class="font-display text-xl mb-4">Perguntas frequentes</h2>
@@ -363,7 +396,11 @@
 <!-- ============ BOTTOM NAV (mobile) ============ -->
 <nav class="md:hidden fixed bottom-0 inset-x-0 z-30 bg-white/95 backdrop-blur border-t border-rose-100 px-2 py-2 flex justify-around" id="nav-mobile"></nav>
 
-<!-- ============ WHATSAPP FLOATING BUTTON ============ -->
+<!-- ============ WHATSAPP + INSTAGRAM FLOATING BUTTONS ============ -->
+<a id="instagram-float" href="#" target="_blank"
+   class="fixed bottom-[168px] md:bottom-24 right-5 z-40 w-12 h-12 rounded-full shadow-card flex items-center justify-center hover:scale-105 active:scale-95 transition" style="background: radial-gradient(circle at 30% 110%, #fdf497 0%, #fdf497 5%, #fd5949 45%, #d6249f 60%, #285AEB 90%);">
+  <i data-icon="instagram" class="text-white" style="width:20px;height:20px"></i>
+</a>
 <a id="whatsapp-float" href="#" target="_blank"
    class="fixed bottom-24 md:bottom-7 right-5 z-40 w-14 h-14 rounded-full bg-sage-600 shadow-card flex items-center justify-center hover:scale-105 active:scale-95 transition">
   <i data-icon="comment-dots" class="text-white" style="width:24px;height:24px"></i>
@@ -383,6 +420,24 @@
   </div>
 </div>
 
+<!-- ============ STORY MODAL (leitura de história + música calma) ============ -->
+<div id="story-modal" class="hidden fixed inset-0 z-[60] flex items-end md:items-center justify-center">
+  <div id="story-modal-backdrop" class="absolute inset-0 bg-ink/40 backdrop-blur-sm"></div>
+  <div class="relative bg-cream w-full md:max-w-lg md:rounded-3xl rounded-t-3xl max-h-[88vh] overflow-y-auto p-6 md:p-8 shadow-card">
+    <button id="story-modal-close" class="absolute top-5 right-5 w-8 h-8 rounded-full bg-white flex items-center justify-center hover:bg-rose-50">
+      <i data-icon="xmark" style="width:16px;height:16px"></i>
+    </button>
+    <div id="story-modal-cover" class="w-16 h-16 rounded-2xl flex items-center justify-center mb-4"></div>
+    <h2 id="story-modal-title" class="font-display text-2xl mb-1"></h2>
+    <p id="story-modal-read" class="text-xs text-ink/40 mb-4"></p>
+    <button id="story-music-toggle" class="mb-5 inline-flex items-center gap-2 text-xs font-semibold bg-sky-50 text-sky-700 px-4 py-2.5 rounded-full hover:bg-sky-100 transition">
+      <i data-icon="music" style="width:14px;height:14px"></i>
+      <span id="story-music-label">Tocar música calma</span>
+    </button>
+    <p id="story-modal-content" class="text-sm text-ink/75 leading-relaxed whitespace-pre-line"></p>
+  </div>
+</div>
+
 <!-- ============ IMAGE LIGHTBOX (foto do produto em tela cheia) ============ -->
 <div id="image-modal" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-4">
   <div id="image-modal-backdrop" class="absolute inset-0 bg-ink/85 backdrop-blur-sm"></div>
@@ -392,6 +447,27 @@
   <div class="relative max-w-2xl w-full flex flex-col items-center gap-3">
     <img id="image-modal-img" src="" alt="" class="max-h-[75vh] w-auto max-w-full object-contain rounded-2xl bg-white shadow-card" />
     <p id="image-modal-caption" class="text-cream text-sm font-medium text-center px-4"></p>
+  </div>
+</div>
+
+<!-- ============ TERMOS DE USO E POLÍTICA DE PRIVACIDADE ============ -->
+<div id="terms-modal" class="hidden fixed inset-0 z-[60] flex items-end md:items-center justify-center">
+  <div id="terms-modal-backdrop" class="absolute inset-0 bg-ink/40 backdrop-blur-sm"></div>
+  <div class="relative bg-cream w-full md:max-w-lg md:rounded-3xl rounded-t-3xl max-h-[85vh] overflow-y-auto p-6 md:p-8 shadow-card">
+    <button id="terms-modal-close" class="absolute top-5 right-5 w-8 h-8 rounded-full bg-white flex items-center justify-center hover:bg-rose-50">
+      <i data-icon="xmark" style="width:16px;height:16px"></i>
+    </button>
+    <h2 class="font-display text-2xl mb-1">Termos de Uso e Política de Privacidade</h2>
+    <p class="text-xs text-ink/40 mb-5">Última atualização: setembro de 2026</p>
+    <div class="text-sm text-ink/75 leading-relaxed space-y-4">
+      <p><strong>1. Quem somos.</strong> A Casu ("nós") oferece um catálogo de produtos e lembretes de reabastecimento para famílias com bebês. Este site é operado a partir do e-mail de contato casuloja@outlook.com.</p>
+      <p><strong>2. Quais dados coletamos.</strong> Ao criar uma conta, coletamos seu e-mail e senha (a senha nunca fica visível para nós, é armazenada de forma criptografada). Opcionalmente, você pode informar nome, WhatsApp, e dados do seu bebê (nome e data de nascimento), usados apenas para personalizar o conteúdo mostrado a você.</p>
+      <p><strong>3. Para que usamos seus dados.</strong> Usamos seu e-mail e WhatsApp exclusivamente para: (a) gerenciar sua conta e pedidos; (b) enviar novidades, dicas e promoções da Casu, caso você tenha marcado a opção de receber esse conteúdo. Você pode desativar o recebimento de novidades a qualquer momento, entrando em contato pelo e-mail acima.</p>
+      <p><strong>4. Não vendemos seus dados.</strong> Seus dados não são vendidos, alugados ou compartilhados com terceiros para fins de marketing. Podemos usar prestadores de serviço (como plataformas de banco de dados e envio de e-mail) apenas para operar o site, sob obrigação de confidencialidade.</p>
+      <p><strong>5. Seus direitos.</strong> Você pode solicitar a qualquer momento a visualização, correção ou exclusão dos seus dados, entrando em contato pelo e-mail casuloja@outlook.com.</p>
+      <p><strong>6. Segurança.</strong> Seus dados são armazenados em infraestrutura com criptografia e controles de acesso, e apenas você tem acesso aos seus próprios dados dentro da sua conta.</p>
+      <p class="text-xs text-ink/40 pt-2">Este resumo pode ser atualizado conforme o site evolui. Dúvidas específicas sobre seus dados podem ser enviadas para casuloja@outlook.com.</p>
+    </div>
   </div>
 </div>
 
@@ -476,6 +552,16 @@ const ICONS = {
   'feather': '<path d="M20 4L9 15"/><path d="M20 4c-6.3 0-14.3 3-16 11 3 1.2 7.3 0 9.3-2"/><path d="M9 15l-5 5"/>',
   'user': '<circle cx="12" cy="8" r="4"/><path d="M5 21c0-4.4 3.1-7 7-7s7 2.6 7 7"/>',
   'log-out': '<path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/>',
+  'instagram': '<rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.3" cy="6.7" r="0.9" fill="currentColor" stroke="none"/>',
+  'music': '<path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/>',
+  'sheep': '<path d="M6 14a4 4 0 014-4h4a4 4 0 014 4v1a3 3 0 01-3 3H9a3 3 0 01-3-3v-1z"/><circle cx="17.5" cy="12" r="2.6"/><path d="M8 18v2M16 18v2"/>',
+  'star-shape': '<path d="M12 2.5l2.9 6 6.6.7-4.9 4.6 1.4 6.5L12 16.9l-5.9 3.4 1.4-6.5-4.9-4.6 6.6-.7z"/>',
+  'whale': '<path d="M2.5 13c2.2-4.3 7.2-6.3 12-5.2 3.1.7 5.2 2.7 6 4.4-1 1-3 1.6-4.3 1-0.5 1.7-2.2 2.8-4.4 2.8-4.3 0-8.3-1-9.3-3z"/><path d="M8 9V6M13 8l1.8-1.8"/>',
+  'train-toy': '<rect x="4" y="9" width="12" height="8" rx="2"/><circle cx="8" cy="19.5" r="1.5"/><circle cx="14" cy="19.5" r="1.5"/><path d="M16 11h3a2 2 0 012 2v2.5h-5"/><path d="M7 9V6h6v3"/>',
+  'rabbit': '<ellipse cx="9.2" cy="6.5" rx="1.5" ry="4"/><ellipse cx="13.2" cy="6.5" rx="1.5" ry="4"/><circle cx="11.2" cy="14" r="5.5"/>',
+  'butterfly': '<path d="M12 6v13"/><path d="M12 9c-2-4.5-9-4.5-9 0.5s7 4.5 9 0.5"/><path d="M12 9c2-4.5 9-4.5 9 0.5s-7 4.5-9 0.5"/><path d="M12 15c-1.5-3-6.5-3-6.5 0.5s5 3 6.5-0.5"/><path d="M12 15c1.5-3 6.5-3 6.5 0.5s-5 3-6.5-0.5"/>',
+  'flower': '<circle cx="12" cy="12" r="2.3"/><circle cx="12" cy="6" r="2.6"/><circle cx="17.2" cy="9.5" r="2.6"/><circle cx="17.2" cy="14.5" r="2.6"/><circle cx="12" cy="18" r="2.6"/><circle cx="6.8" cy="14.5" r="2.6"/><circle cx="6.8" cy="9.5" r="2.6"/>',
+  'file-text': '<path d="M6 3h9l5 5v13a1 1 0 01-1 1H6a1 1 0 01-1-1V4a1 1 0 011-1z"/><path d="M15 3v5h5"/><path d="M8.5 12.5h7M8.5 16h7"/>',
   'pacifier': '<circle cx="12" cy="9" r="5"/><path d="M8 9a4 4 0 008 0"/><rect x="9.5" y="14" width="5" height="3.2" rx="1.5"/><path d="M9 17.3c-.2 1.7 1 3 3 3s3.2-1.3 3-3"/>',
 };
 
@@ -567,6 +653,105 @@ const EXAMPLE_REMINDERS = [
   { id: 6, name: 'Lenços de papel/toalha', icon: 'sticky-note', cycleDays: 15, lastPurchase: daysAgo(2),  link: mlSearchLink('Toalhas umedecidas bebê') },
 ];
 
+const STORIES = [
+  { id: 1, title: 'A Ovelhinha Sonolenta', icon: 'sheep', color: 'bg-sky-100', iconColor: 'text-sky-700', read: '2 min',
+    content: `Era uma vez uma ovelhinha muito fofa chamada Nuvem, que adorava cochilar. Toda noite, ela saía procurando o lugar mais macio do campo pra tirar uma soneca.
+
+Primeiro, ela tentou dormir em cima de uma pedra. "Dura demais", pensou.
+Depois, tentou embaixo de uma árvore. "Cheia de gravetinhos", ela bocejou.
+
+Foi então que Nuvem olhou pro céu e viu as nuvens de verdade, bem branquinhas e fofas, boiando bem devagarinho.
+
+"Ah, se eu pudesse dormir aí em cima..." ela suspirou.
+
+Mas aí ela percebeu uma coisa: seu próprio pelo era tão macio quanto aquelas nuvens no céu. Ela se enrolou bem quietinha, encostou a cabecinha nas próprias patinhas, e adormeceu sorrindo, sonhando que estava flutuando lá no alto, entre as nuvens.
+
+E você, já achou o seu cantinho mais macio pra dormir hoje?` },
+
+  { id: 2, title: 'O Ursinho e a Lua', icon: 'moon', color: 'bg-rose-100', iconColor: 'text-rose-700', read: '3 min',
+    content: `Um ursinho chamado Mel não conseguia dormir. Toda noite, ele olhava pela janela da toca e via a Lua, redonda e prateada, olhando de volta pra ele.
+
+"Será que a Lua também tem sono?", Mel se perguntou.
+
+Numa noite, ele decidiu perguntar. "Lua, você nunca dorme?"
+
+A Lua sorriu, bem devagar. "Eu durmo sim, pequeno urso. Só que enquanto eu brilho, é pra te lembrar que mesmo no escuro, sempre tem uma luz cuidando de você."
+
+Mel achou aquilo tão bonito que parou de ter medo do escuro. Ele se aconchegou no colo da mamãe ursa, olhou mais uma vez pra Lua, e sussurrou "boa noite" antes de fechar os olhinhos.
+
+E a Lua, quietinha, continuou brilhando a noite inteira, cuidando de todos os bichinhos que dormiam lá embaixo.` },
+
+  { id: 3, title: 'A Baleia que Cantava Baixinho', icon: 'whale', color: 'bg-sky-100', iconColor: 'text-sky-700', read: '3 min',
+    content: `No fundo do mar, vivia uma baleia chamada Azul que tinha um dom especial: sua canção era a mais calma de todo o oceano.
+
+Todas as noites, quando os peixinhos pequenos ficavam agitados demais pra dormir, Azul nadava bem devagar e começava a cantar. Sua voz era grave e macia, como um abraço feito de som.
+
+Os peixinhos paravam de nadar de um lado pro outro. As estrelas-do-mar se aconchegavam nas rochas. Até as ondas lá em cima pareciam ficar mais mansas.
+
+"Durmam bem, pequenos", cantava Azul, "o mar cuida de vocês essa noite."
+
+Um por um, os bichinhos do mar iam fechando os olhos, embalados pela canção baixinha da baleia, até que o oceano inteiro parecia estar dormindo — só Azul continuava cantando, bem baixinho, cuidando do sono de todo mundo.` },
+
+  { id: 4, title: 'O Trem da Soneca', icon: 'train-toy', color: 'bg-amber-100', iconColor: 'text-amber-600', read: '2 min',
+    content: `Quando o relógio marca a hora de dormir, um trem muito especial começa a andar: o Trem da Soneca.
+
+Ele não anda sobre trilhos de ferro, mas sobre trilhos feitos de nuvens macias. E ele só sai de viagem depois que todo mundo já escovou os dentes e vestiu o pijama.
+
+"Próxima parada: Sonho Bom!", anuncia o maquinista, um coelhinho de óculos.
+
+Dentro do trem, cada vagão tem uma caminha quentinha, um travesseiro fofo e uma coberta macia. O trem balança bem devagarinho, clack... clack... clack..., no ritmo certo pra ninar.
+
+Ele passa por montanhas de algodão-doce, atravessa túneis de estrelas, e só para de manhã, quando o sol acorda e diz "bom dia" pra todo mundo que viajou a noite inteira, sonhando coisas boas.
+
+Toc, toc, toc... o Trem da Soneca já está chegando. Hora de embarcar.` },
+
+  { id: 5, title: 'A Estrelinha Pequenina', icon: 'star-shape', color: 'bg-amber-100', iconColor: 'text-amber-600', read: '3 min',
+    content: `No céu, entre milhões de estrelas grandes e brilhantes, havia uma estrelinha bem pequena chamada Luz. Ela achava que sua luz era fraquinha demais, quase ninguém conseguia ver.
+
+"Eu sou tão pequena," ela suspirava, "acho que não faço diferença nenhuma."
+
+Uma noite, lá embaixo na Terra, uma menina não conseguia dormir, com medo do quarto escuro. Sua mãe abriu a cortina e apontou pro céu.
+
+"Olha," disse a mãe, "vê aquela estrelinha ali, bem no cantinho? Ela está brilhando só pra você, hoje."
+
+A menina sorriu, encontrou a luzinha pequena e quieta, e sentiu o medo ir embora. Ela fechou os olhos e dormiu tranquila.
+
+Lá no céu, Luz não sabia de nada disso — mas continuou brilhando, do seu jeitinho pequeno, porque toda luz, por menor que seja, ajuda alguém a não ter medo do escuro.` },
+
+  { id: 6, title: 'O Coelhinho e o Cobertor de Neblina', icon: 'rabbit', color: 'bg-sage-100', iconColor: 'text-sage-600', read: '2 min',
+    content: `No campo, quando a noite chega, uma neblina bem fininha desce das montanhas e cobre tudo, como um cobertor gigante e macio.
+
+Um coelhinho chamado Fofo adorava esse momento. Assim que via a neblina chegando, ele corria pro meio do gramado e esperava ela chegar, bem devagar, cobrindo suas patinhas, depois as orelhas, até só a pontinha do nariz ficar de fora.
+
+"Boa noite, neblina," ele sussurrava.
+
+A neblina não respondia, claro, mas parecia abraçar o coelhinho com todo o carinho do mundo, deixando tudo quietinho e macio ao redor.
+
+Fofo fechava os olhos ali mesmo, sentindo o friozinho gostoso e o silêncio da noite, até sua mamãe vir buscá-lo, carregando ele de volta pra toca, onde o cobertor de verdade já estava esperando, quentinho.` },
+
+  { id: 7, title: 'A Borboleta que Queria Voar Devagar', icon: 'butterfly', color: 'bg-rose-100', iconColor: 'text-rose-700', read: '3 min',
+    content: `Todas as borboletas do jardim voavam rápido, de flor em flor, sem parar. Todas, menos uma: a pequena Vagalume, que gostava de voar bem devagarinho.
+
+"Por que você não voa rápido como a gente?", perguntavam as outras borboletas.
+
+"Porque assim," respondia Vagalume, "eu consigo ver cada pétala, sentir cada cheirinho, e ouvir o vento contando historinhas."
+
+As outras borboletas riam, mas Vagalume não se importava. Ela flutuava devagar sobre as rosas, fazia uma pausa em cima dos girassóis, e observava o céu ficar laranja quando o sol ia se deitar.
+
+Quando a noite chegava, enquanto as outras borboletas já estavam cansadas de tanto voar rápido, Vagalume pousava tranquila numa folha macia, satisfeita com o dia que tinha vivido devagarzinho, e dormia com um sorriso de quem não teve pressa de nada.` },
+
+  { id: 8, title: 'O Jardim que Dormia ao Entardecer', icon: 'flower', color: 'bg-sage-100', iconColor: 'text-sage-600', read: '2 min',
+    content: `Quando o sol começa a descer no céu, um jardim inteiro se prepara pra dormir.
+
+As margaridas fecham suas pétalas branquinhas, uma por uma, como se estivessem fechando os olhinhos. Os girassóis, que passaram o dia todo olhando pro sol, viram a cabeça devagar, dizendo "até amanhã".
+
+As borboletas guardam as asas e se escondem entre as folhas. As abelhas voltam pra colmeia, cansadas de tanto trabalhar, zumbindo baixinho uma canção de ninar só delas.
+
+Até a grama parece ficar mais quietinha, balançando devagar com o vento da noite.
+
+O jardim inteiro respira fundo e adormece, esperando o sol voltar amanhã pra acordar todo mundo de novo, com as pétalas se abrindo e o dia começando outra vez, cheio de cores.` },
+];
+
 const articles = [
   { id: 1, phase: 'Recém-nascido', title: 'Como dar o primeiro banho com segurança', excerpt: 'Passo a passo tranquilo para os primeiros banhos, sem estresse.', read: '3 min', content: 'Escolha um ambiente aquecido, entre 24°C e 27°C, e tenha tudo separado antes de começar: toalha, fralda limpa e roupinha. A água deve estar morna, entre 36°C e 37°C — teste sempre no pulso do seu braço. Segure a cabeça e o pescoço do bebê com firmeza o tempo todo. Banhos rápidos, de 5 a 10 minutos, são mais do que suficientes nesta fase. Seque bem as dobrinhas para evitar assaduras e aproveite esse momento de conexão com calma.' },
   { id: 2, phase: 'Recém-nascido', title: 'Entendendo o choro do recém-nascido', excerpt: 'Fome, sono, colo ou desconforto: aprenda a diferenciar os sinais.', read: '4 min', content: 'Nas primeiras semanas, o choro é a única forma de comunicação do bebê. Um choro curto e repetitivo geralmente indica fome; um choro que aumenta gradualmente pode ser cansaço. Observe também a linguagem corporal: pernas encolhidas podem indicar cólica, enquanto esfregar os olhos costuma indicar sono. Com o tempo, você vai reconhecer os padrões da sua própria filha — confie na sua percepção, ela é mais afiada do que parece.' },
@@ -604,6 +789,7 @@ let currentView = 'inicio';
 const WHATSAPP_NUMBER = '5511988040037';
 const WHATSAPP_MSG = encodeURIComponent('Olá! Preciso de ajuda com os produtos do meu bebê.');
 const waLink = `https://wa.me/${WHATSAPP_NUMBER}?text=${WHATSAPP_MSG}`;
+const instagramLink = 'https://www.instagram.com/casu_loja?stkn=amY3c2p4eDEwbGR6&utm_source=qr';
 
 function reminderStatus(r){
   const last = new Date(r.lastPurchase);
@@ -760,8 +946,13 @@ function traduzErroAuth(msg){
 async function handleSignup(e){
   e.preventDefault();
   if (!sb){ showAuthError('Esse recurso só funciona no site publicado, não aqui no preview.'); return; }
+  if (!document.getElementById('signup-terms').checked){
+    showAuthError('Pra criar sua conta, é preciso aceitar os Termos de Uso e Política de Privacidade.');
+    return;
+  }
   const email = document.getElementById('signup-email').value.trim();
   const password = document.getElementById('signup-password').value;
+  const whatsapp = document.getElementById('signup-whatsapp').value.trim();
   const optIn = document.getElementById('signup-optin').checked;
   const { error } = await sb.auth.signUp({
     email, password,
@@ -770,6 +961,7 @@ async function handleSignup(e){
       mom_name: profile?.mom || '',
       baby_name: profile?.baby || '',
       baby_birth: profile?.birth || null,
+      whatsapp: whatsapp,
     }}
   });
   if (error) { showAuthError(traduzErroAuth(error.message)); return; }
@@ -853,9 +1045,11 @@ async function renderConta(){
 
   dash.classList.remove('hidden');
   document.getElementById('conta-email').textContent = session.user.email;
+  currentUserId = session.user.id;
 
-  const { data: prof } = await sb.from('profiles').select('marketing_opt_in').eq('id', session.user.id).single();
+  const { data: prof } = await sb.from('profiles').select('marketing_opt_in, whatsapp').eq('id', session.user.id).single();
   document.getElementById('conta-optin-status').textContent = prof?.marketing_opt_in ? 'Ativado' : 'Desativado';
+  document.getElementById('conta-whatsapp').value = prof?.whatsapp || '';
 
   const { data: orders } = await sb.from('orders').select('*').eq('user_id', session.user.id).order('created_at', { ascending: false });
   const ordersEl = document.getElementById('conta-orders');
@@ -877,6 +1071,17 @@ async function renderConta(){
   }
 }
 
+let currentUserId = null;
+async function handleSaveWhatsapp(){
+  if (!sb || !currentUserId) return;
+  const whatsapp = document.getElementById('conta-whatsapp').value.trim();
+  const { error } = await sb.from('profiles').update({ whatsapp }).eq('id', currentUserId);
+  if (error){ showToast('Não deu pra salvar agora, tenta de novo', 'circle-exclamation'); return; }
+  showToast('WhatsApp salvo!', 'circle-check');
+}
+document.getElementById('btn-save-whatsapp').addEventListener('click', handleSaveWhatsapp);
+
+
 document.getElementById('tab-login').addEventListener('click', ()=> setAuthMode('login'));
 document.getElementById('tab-signup').addEventListener('click', ()=> setAuthMode('signup'));
 document.getElementById('form-login').addEventListener('submit', handleLogin);
@@ -890,6 +1095,16 @@ document.getElementById('link-forgot').addEventListener('click', ()=>{
   hideAuthMessages();
 });
 document.getElementById('link-back-to-login').addEventListener('click', ()=> setAuthMode('login'));
+
+document.getElementById('open-terms').addEventListener('click', ()=>{
+  document.getElementById('terms-modal').classList.remove('hidden');
+});
+document.getElementById('terms-modal-close').addEventListener('click', ()=>{
+  document.getElementById('terms-modal').classList.add('hidden');
+});
+document.getElementById('terms-modal-backdrop').addEventListener('click', ()=>{
+  document.getElementById('terms-modal').classList.add('hidden');
+});
 
 if (sb){
   sb.auth.onAuthStateChange((event)=>{
@@ -962,11 +1177,7 @@ function reminderCard(r, compact=false){
     <div class="grid grid-cols-2 gap-2 pt-1 border-t border-rose-50">
       <label class="text-[11px] text-ink/45">
         Ciclo
-        <select data-cycle="${r.id}" class="mt-1 w-full border border-rose-100 rounded-lg px-2 py-1.5 text-xs focus-ring focus:border-rose-300">
-          <option value="15" ${r.cycleDays===15?'selected':''}>15 dias</option>
-          <option value="30" ${r.cycleDays===30?'selected':''}>30 dias</option>
-          <option value="45" ${r.cycleDays===45?'selected':''}>45 dias</option>
-        </select>
+        <input data-cycle="${r.id}" type="number" min="1" max="365" value="${r.cycleDays}" class="mt-1 w-full border border-rose-100 rounded-lg px-2 py-1.5 text-xs focus-ring focus:border-rose-300" placeholder="dias" />
       </label>
       <label class="text-[11px] text-ink/45">
         Última compra
@@ -1026,18 +1237,15 @@ function renderReminders(){
 
   // global alert
   const urgent = reminders.filter(r => reminderStatus(r).status === 'Reabastecer Agora');
-  const bell = document.getElementById('bell-dot');
   const banner = document.getElementById('global-alert');
   if (urgent.length){
     banner.classList.remove('hidden');
-    bell.classList.remove('hidden');
     document.getElementById('global-alert-text').textContent =
       urgent.length === 1
         ? `${urgent[0].name} está no prazo de recomprar.`
         : `${urgent.map(u=>u.name).join(', ')} estão no prazo de recomprar.`;
   } else {
     banner.classList.add('hidden');
-    bell.classList.add('hidden');
   }
 
   bindReminderEvents();
@@ -1108,7 +1316,7 @@ document.getElementById('btn-save-add').addEventListener('click', ()=>{
   const cycle = Number(document.getElementById('new-cycle').value);
   const date = document.getElementById('new-date').value || todayISO();
   if (!name){ showToast('Digite o nome do produto', 'alert-circle'); return; }
-  reminders.push({ id: Date.now(), name, icon: 'package', cycleDays: cycle, lastPurchase: date, link: 'https://loja.exemplo.com/busca?q=' + encodeURIComponent(name) });
+  reminders.push({ id: Date.now(), name, icon: 'package', cycleDays: cycle, lastPurchase: date, link: mlSearchLink(name) });
   document.getElementById('new-name').value = '';
   document.getElementById('add-form').classList.add('hidden');
   renderReminders();
@@ -1240,6 +1448,106 @@ document.getElementById('image-modal-backdrop').addEventListener('click', closeI
 /* ==================================================================
    RENDER: FAQ + SUPPORT
 ================================================================== */
+/* ==================================================================
+   RENDER: HISTÓRIAS PARA DORMIR
+================================================================== */
+function renderHistorias(){
+  const grid = document.getElementById('historias-grid');
+  grid.innerHTML = STORIES.map(s => `
+    <div data-story="${s.id}" class="cursor-pointer rounded-2xl bg-white shadow-soft p-5 hover:shadow-card transition flex flex-col gap-3">
+      <div class="w-14 h-14 rounded-2xl ${s.color} flex items-center justify-center">
+        <i data-icon="${s.icon}" class="${s.iconColor}" style="width:26px;height:26px"></i>
+      </div>
+      <h3 class="font-display text-lg leading-snug">${s.title}</h3>
+      <div class="flex items-center gap-1.5 text-[11px] text-ink/40 mt-auto pt-1">
+        <i data-icon="clock" style="width:12px;height:12px"></i> ${s.read} de leitura
+      </div>
+    </div>
+  `).join('');
+  renderIcons();
+  document.querySelectorAll('[data-story]').forEach(el=>{
+    el.addEventListener('click', ()=> openStory(Number(el.dataset.story)));
+  });
+}
+
+function openStory(id){
+  const s = STORIES.find(x => x.id === id);
+  if (!s) return;
+  document.getElementById('story-modal-cover').className = `w-16 h-16 rounded-2xl flex items-center justify-center mb-4 ${s.color}`;
+  document.getElementById('story-modal-cover').innerHTML = `<i data-icon="${s.icon}" class="${s.iconColor}" style="width:30px;height:30px"></i>`;
+  document.getElementById('story-modal-title').textContent = s.title;
+  document.getElementById('story-modal-read').textContent = s.read + ' de leitura';
+  document.getElementById('story-modal-content').textContent = s.content;
+  document.getElementById('story-modal').classList.remove('hidden');
+  renderIcons();
+  updateMusicButton();
+}
+function closeStoryModal(){
+  document.getElementById('story-modal').classList.add('hidden');
+  stopCalmMusic();
+}
+document.getElementById('story-modal-close').addEventListener('click', closeStoryModal);
+document.getElementById('story-modal-backdrop').addEventListener('click', closeStoryModal);
+
+document.getElementById('stories-btn').addEventListener('click', ()=> switchView('historias'));
+document.getElementById('stories-btn-desktop').addEventListener('click', ()=> switchView('historias'));
+
+/* ---- Música calma: gerada ao vivo no navegador, sem nenhum arquivo externo ---- */
+let audioCtx = null;
+let musicPlaying = false;
+let musicNodes = [];
+let musicInterval = null;
+
+function startCalmMusic(){
+  if (musicPlaying) return;
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+  } catch(e){ return; }
+  musicPlaying = true;
+
+  const padGain = audioCtx.createGain();
+  padGain.gain.value = 0.045;
+  padGain.connect(audioCtx.destination);
+  const o1 = audioCtx.createOscillator(); o1.type = 'sine'; o1.frequency.value = 196;
+  const o2 = audioCtx.createOscillator(); o2.type = 'sine'; o2.frequency.value = 196.8;
+  o1.connect(padGain); o2.connect(padGain);
+  o1.start(); o2.start();
+  musicNodes.push(o1, o2, padGain);
+
+  const notes = [392.00, 440.00, 523.25, 587.33, 659.25];
+  musicInterval = setInterval(()=>{
+    if (!musicPlaying || !audioCtx) return;
+    const freq = notes[Math.floor(Math.random()*notes.length)];
+    const t = audioCtx.currentTime;
+    const osc = audioCtx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.value = freq;
+    const g = audioCtx.createGain();
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(0.06, t + 0.5);
+    g.gain.linearRampToValueAtTime(0, t + 3.2);
+    osc.connect(g); g.connect(audioCtx.destination);
+    osc.start(t); osc.stop(t + 3.3);
+  }, 2400);
+}
+function stopCalmMusic(){
+  musicPlaying = false;
+  if (musicInterval) clearInterval(musicInterval);
+  musicNodes.forEach(n=>{ try{ n.stop && n.stop(); n.disconnect && n.disconnect(); }catch(e){} });
+  musicNodes = [];
+}
+function updateMusicButton(){
+  document.getElementById('story-music-label').textContent = musicPlaying ? 'Pausar música' : 'Tocar música calma';
+}
+document.getElementById('story-music-toggle').addEventListener('click', ()=>{
+  if (musicPlaying) stopCalmMusic(); else startCalmMusic();
+  updateMusicButton();
+});
+
+/* ==================================================================
+   RENDER: FAQ + SUPPORT
+================================================================== */
 function renderFaq(){
   const wrap = document.getElementById('faq-list');
   wrap.innerHTML = faqs.map((f,i) => `
@@ -1268,6 +1576,8 @@ function renderFaq(){
 function init(){
   document.getElementById('whatsapp-float').href = waLink;
   document.getElementById('support-whatsapp-link').href = waLink;
+  document.getElementById('instagram-float').href = instagramLink;
+  document.getElementById('support-instagram-link').href = instagramLink;
 
   applyProfile();
   renderNav();
@@ -1276,6 +1586,7 @@ function init(){
   renderArticles();
   renderProductFilters();
   renderProducts();
+  renderHistorias();
   renderFaq();
   renderIcons();
 
