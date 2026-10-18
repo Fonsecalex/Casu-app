@@ -236,6 +236,13 @@
         <!-- Add form -->
         <div id="add-form" class="hidden mt-5 mb-8 rounded-2xl border border-rose-100 bg-white shadow-soft p-5">
           <p class="font-semibold text-sm mb-4">Adicionar novo item de reabastecimento</p>
+          <label class="text-[11px] text-ink/45 block mb-3">
+            Escolher da loja (recomendado — já vem com o link certo)
+            <select id="new-product-select" class="mt-1 w-full border border-rose-100 rounded-xl px-3.5 py-2.5 text-sm focus-ring focus:border-rose-300">
+              <option value="">— Selecione um produto —</option>
+              <option value="__custom__">✏️ Outro (digitar nome manualmente)</option>
+            </select>
+          </label>
           <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
             <input id="new-name" placeholder="Nome do produto" class="border border-rose-100 rounded-xl px-3.5 py-2.5 text-sm focus-ring focus:border-rose-300" />
             <input id="new-cycle" type="number" min="1" max="365" value="30" placeholder="Ciclo (dias)" class="border border-rose-100 rounded-xl px-3.5 py-2.5 text-sm focus-ring focus:border-rose-300" />
@@ -394,15 +401,15 @@
 </div>
 
 <!-- ============ BOTTOM NAV (mobile) ============ -->
-<nav class="md:hidden fixed bottom-0 inset-x-0 z-30 bg-white/95 backdrop-blur border-t border-rose-100 px-2 py-2 flex justify-around" id="nav-mobile"></nav>
+<nav class="md:hidden fixed bottom-0 inset-x-0 z-[80] bg-white/95 backdrop-blur border-t border-rose-100 px-2 pt-2 flex justify-around" id="nav-mobile" style="padding-bottom: max(0.5rem, env(safe-area-inset-bottom, 0px));"></nav>
 
 <!-- ============ WHATSAPP + INSTAGRAM FLOATING BUTTONS ============ -->
 <a id="instagram-float" href="#" target="_blank"
-   class="fixed bottom-[168px] md:bottom-24 right-5 z-40 w-12 h-12 rounded-full shadow-card flex items-center justify-center hover:scale-105 active:scale-95 transition" style="background: radial-gradient(circle at 30% 110%, #fdf497 0%, #fdf497 5%, #fd5949 45%, #d6249f 60%, #285AEB 90%);">
+   class="fixed bottom-[180px] md:bottom-24 right-5 z-[80] w-12 h-12 rounded-full shadow-card flex items-center justify-center hover:scale-105 active:scale-95 transition" style="background: radial-gradient(circle at 30% 110%, #fdf497 0%, #fdf497 5%, #fd5949 45%, #d6249f 60%, #285AEB 90%);">
   <i data-icon="instagram" class="text-white" style="width:20px;height:20px"></i>
 </a>
 <a id="whatsapp-float" href="#" target="_blank"
-   class="fixed bottom-24 md:bottom-7 right-5 z-40 w-14 h-14 rounded-full bg-sage-600 shadow-card flex items-center justify-center hover:scale-105 active:scale-95 transition">
+   class="fixed bottom-32 md:bottom-7 right-5 z-[80] w-14 h-14 rounded-full bg-sage-600 shadow-card flex items-center justify-center hover:scale-105 active:scale-95 transition">
   <i data-icon="comment-dots" class="text-white" style="width:24px;height:24px"></i>
 </a>
 
@@ -1304,20 +1311,72 @@ function bindReminderEvents(){
 }
 
 /* Add new reminder */
+function populateProductSelect(){
+  const sel = document.getElementById('new-product-select');
+  const customOption = sel.querySelector('option[value="__custom__"]');
+  // remove opções de produto anteriores (mantém só a primeira e a de "outro")
+  Array.from(sel.querySelectorAll('option')).forEach(opt=>{
+    if (opt.value && opt.value !== '__custom__') opt.remove();
+  });
+  products.forEach(p=>{
+    const opt = document.createElement('option');
+    opt.value = String(p.id);
+    opt.textContent = p.name;
+    sel.insertBefore(opt, customOption);
+  });
+}
+
 document.getElementById('btn-open-add').addEventListener('click', ()=>{
   document.getElementById('new-date').value = todayISO();
+  populateProductSelect();
   document.getElementById('add-form').classList.toggle('hidden');
 });
 document.getElementById('btn-cancel-add').addEventListener('click', ()=>{
   document.getElementById('add-form').classList.add('hidden');
 });
+
+let selectedCatalogProduct = null;
+
+document.getElementById('new-product-select').addEventListener('change', (e)=>{
+  const val = e.target.value;
+  const nameInput = document.getElementById('new-name');
+  if (!val){
+    selectedCatalogProduct = null;
+    return;
+  }
+  if (val === '__custom__'){
+    selectedCatalogProduct = null;
+    nameInput.value = '';
+    nameInput.focus();
+    return;
+  }
+  const p = products.find(x => String(x.id) === val);
+  if (p){
+    selectedCatalogProduct = p;
+    nameInput.value = p.name;
+  }
+});
+// se a pessoa editar o nome manualmente depois de escolher da lista, volta a ser "personalizado"
+document.getElementById('new-name').addEventListener('input', ()=>{
+  if (selectedCatalogProduct && document.getElementById('new-name').value !== selectedCatalogProduct.name){
+    selectedCatalogProduct = null;
+    document.getElementById('new-product-select').value = '__custom__';
+  }
+});
+
 document.getElementById('btn-save-add').addEventListener('click', ()=>{
   const name = document.getElementById('new-name').value.trim();
   const cycle = Number(document.getElementById('new-cycle').value);
   const date = document.getElementById('new-date').value || todayISO();
   if (!name){ showToast('Digite o nome do produto', 'alert-circle'); return; }
-  reminders.push({ id: Date.now(), name, icon: 'package', cycleDays: cycle, lastPurchase: date, link: mlSearchLink(name) });
+  // se veio de um produto real do catálogo, usa o link exato dele; senão, busca no Mercado Livre
+  const link = (selectedCatalogProduct && selectedCatalogProduct.name === name)
+    ? selectedCatalogProduct.link
+    : mlSearchLink(name);
+  reminders.push({ id: Date.now(), name, icon: 'package', cycleDays: cycle, lastPurchase: date, link });
   document.getElementById('new-name').value = '';
+  document.getElementById('new-product-select').value = '';
+  selectedCatalogProduct = null;
   document.getElementById('add-form').classList.add('hidden');
   renderReminders();
   showToast(`"${name}" adicionado aos lembretes`, 'plus-circle');
@@ -1595,4 +1654,5 @@ function init(){
 init();
 </script>
 </body>
+</html>
 </html>
