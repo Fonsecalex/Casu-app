@@ -480,22 +480,27 @@
 
 <!-- ============ PROFILE MODAL (cada visitante configura o próprio bebê) ============ -->
 <div id="profile-modal" class="hidden fixed inset-0 z-50 flex items-end md:items-center justify-center">
-  <div class="absolute inset-0 bg-ink/40 backdrop-blur-sm"></div>
-  <div class="relative bg-cream w-full md:max-w-sm md:rounded-3xl rounded-t-3xl p-6 md:p-8 shadow-card">
-    <div class="w-11 h-11 rounded-full bg-rose-200 flex items-center justify-center mb-4">
-      <i data-icon="pacifier" class="text-rose-700" style="width:20px;height:20px"></i>
+  <div id="profile-modal-backdrop" class="absolute inset-0 bg-ink/40 backdrop-blur-sm"></div>
+  <div class="relative bg-cream w-full md:max-w-sm md:rounded-3xl rounded-t-3xl shadow-card max-h-[90vh] flex flex-col">
+    <button id="profile-modal-close" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-white shadow-soft flex items-center justify-center hover:bg-rose-50 z-10">
+      <i data-icon="xmark" style="width:16px;height:16px"></i>
+    </button>
+    <div class="overflow-y-auto p-6 md:p-8 pb-4">
+      <div class="w-11 h-11 rounded-full bg-rose-200 flex items-center justify-center mb-4">
+        <i data-icon="pacifier" class="text-rose-700" style="width:20px;height:20px"></i>
+      </div>
+      <h2 class="font-display text-2xl mb-1 pr-8">Conte sobre o seu bebê</h2>
+      <p class="text-sm text-ink/55 mb-5">Assim a gente personaliza dicas, produtos e lembretes pra fase certa.</p>
+      <div class="flex flex-col gap-3">
+        <input id="profile-mom" type="text" placeholder="Seu nome (opcional)" class="border border-rose-100 rounded-xl px-3.5 py-2.5 text-sm focus-ring focus:border-rose-300" />
+        <input id="profile-baby" type="text" placeholder="Nome do bebê" class="border border-rose-100 rounded-xl px-3.5 py-2.5 text-sm focus-ring focus:border-rose-300" />
+        <label class="text-xs text-ink/50">
+          Data de nascimento
+          <input id="profile-birth" type="date" class="mt-1 w-full border border-rose-100 rounded-xl px-3.5 py-2.5 text-sm focus-ring focus:border-rose-300" />
+        </label>
+      </div>
     </div>
-    <h2 class="font-display text-2xl mb-1">Conte sobre o seu bebê</h2>
-    <p class="text-sm text-ink/55 mb-5">Assim a gente personaliza dicas, produtos e lembretes pra fase certa.</p>
-    <div class="flex flex-col gap-3">
-      <input id="profile-mom" type="text" placeholder="Seu nome (opcional)" class="border border-rose-100 rounded-xl px-3.5 py-2.5 text-sm focus-ring focus:border-rose-300" />
-      <input id="profile-baby" type="text" placeholder="Nome do bebê" class="border border-rose-100 rounded-xl px-3.5 py-2.5 text-sm focus-ring focus:border-rose-300" />
-      <label class="text-xs text-ink/50">
-        Data de nascimento
-        <input id="profile-birth" type="date" class="mt-1 w-full border border-rose-100 rounded-xl px-3.5 py-2.5 text-sm focus-ring focus:border-rose-300" />
-      </label>
-    </div>
-    <div class="flex gap-2 mt-6">
+    <div class="flex gap-2 p-6 md:p-8 pt-3 border-t border-rose-100/70 shrink-0">
       <button id="profile-save" class="flex-1 bg-rose-600 text-white rounded-full text-sm font-semibold py-2.5 hover:bg-rose-700 transition">Salvar e continuar</button>
       <button id="profile-skip" class="px-4 rounded-full border border-rose-100 text-sm text-ink/60 hover:bg-rose-50 transition">Pular</button>
     </div>
@@ -553,6 +558,7 @@ const ICONS = {
   'bottle-droplet': '<path d="M9.5 2h5M10.5 2v2.8l-2 2.2v13a2 2 0 002 2h3a2 2 0 002-2V7l-2-2.2V2"/>',
   'moon': '<path d="M20 14.2A8.5 8.5 0 119.8 4 7 7 0 0020 14.2z"/>',
   'box': '<path d="M3 8l9-5 9 5-9 5-9-5z"/><path d="M3 8v9l9 5 9-5V8"/><path d="M12 13v9"/>',
+  'trash': '<path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M6 7l1 13a2 2 0 002 2h6a2 2 0 002-2l1-13"/><path d="M10 11v6M14 11v6"/>',
   'note-sticky': '<path d="M5 3h11l5 5v10a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z"/><path d="M15.5 3.2V8h4.8"/>',
   'utensils': '<path d="M6 3v7a2 2 0 002 2 2 2 0 002-2V3M8 12v9M17 3c-1.5 0-3 1.6-3 4v4h3M17 3v18"/>',
   'pump-soap': '<path d="M9 3h4M10 3v2h2V3M8 7h6l1 12a2 2 0 01-2 2H9a2 2 0 01-2-2L8 7z"/>',
@@ -901,6 +907,8 @@ document.getElementById('profile-save').addEventListener('click', ()=>{
   showToast('Perfil salvo! Personalizamos tudo pra vocês 💛');
 });
 document.getElementById('profile-skip').addEventListener('click', closeProfileModal);
+document.getElementById('profile-modal-close').addEventListener('click', closeProfileModal);
+document.getElementById('profile-modal-backdrop').addEventListener('click', closeProfileModal);
 document.getElementById('profile-box-desktop').addEventListener('click', openProfileModal);
 document.getElementById('profile-box-mobile').addEventListener('click', openProfileModal);
 
@@ -1181,20 +1189,29 @@ function reminderCard(r, compact=false){
     <span class="self-start text-[11px] font-semibold px-2.5 py-1 rounded-full ${c.badge}">${s.status}</span>
 
     ${compact ? '' : `
-    <div class="grid grid-cols-2 gap-2 pt-1 border-t border-rose-50">
-      <label class="text-[11px] text-ink/45">
-        Ciclo
-        <input data-cycle="${r.id}" type="number" min="1" max="365" value="${r.cycleDays}" class="mt-1 w-full border border-rose-100 rounded-lg px-2 py-1.5 text-xs focus-ring focus:border-rose-300" placeholder="dias" />
+    <div class="pt-1 border-t border-rose-50">
+      <label class="text-[11px] text-ink/45 block mb-2">
+        Nome do produto
+        <input data-editname="${r.id}" type="text" value="${r.name}" class="mt-1 w-full border border-rose-100 rounded-lg px-2 py-1.5 text-xs focus-ring focus:border-rose-300" />
       </label>
-      <label class="text-[11px] text-ink/45">
-        Última compra
-        <input data-lastpurchase="${r.id}" type="date" value="${r.lastPurchase}" class="mt-1 w-full border border-rose-100 rounded-lg px-2 py-1.5 text-xs focus-ring focus:border-rose-300" />
-      </label>
+      <div class="grid grid-cols-2 gap-2">
+        <label class="text-[11px] text-ink/45">
+          Ciclo
+          <input data-cycle="${r.id}" type="number" min="1" max="365" value="${r.cycleDays}" class="mt-1 w-full border border-rose-100 rounded-lg px-2 py-1.5 text-xs focus-ring focus:border-rose-300" placeholder="dias" />
+        </label>
+        <label class="text-[11px] text-ink/45">
+          Última compra
+          <input data-lastpurchase="${r.id}" type="date" value="${r.lastPurchase}" class="mt-1 w-full border border-rose-100 rounded-lg px-2 py-1.5 text-xs focus-ring focus:border-rose-300" />
+        </label>
+      </div>
     </div>
     <div class="flex items-center gap-2">
       <a href="${r.link}" target="_blank" data-buy="${r.id}" class="flex-1 text-center text-xs font-semibold text-white ${c.btn} rounded-full py-2.5 transition">Reabastecer Agora</a>
       <button data-bought="${r.id}" title="Marquei como comprado hoje" class="w-9 h-9 shrink-0 rounded-full border border-rose-100 flex items-center justify-center hover:bg-rose-50 transition">
         <i data-icon="check" style="width:15px;height:15px"></i>
+      </button>
+      <button data-delete="${r.id}" title="Apagar item" class="w-9 h-9 shrink-0 rounded-full border border-rose-100 flex items-center justify-center hover:bg-rose-50 hover:border-rose-300 transition">
+        <i data-icon="trash" class="text-rose-500" style="width:15px;height:15px"></i>
       </button>
     </div>`}
   </div>`;
@@ -1262,6 +1279,7 @@ function renderReminders(){
   const emptyAddBtn = document.getElementById('empty-add-btn');
   if (emptyAddBtn) emptyAddBtn.addEventListener('click', ()=>{
     document.getElementById('new-date').value = todayISO();
+    populateProductSelect();
     document.getElementById('add-form').classList.remove('hidden');
   });
   const emptyExampleBtn = document.getElementById('empty-example-btn');
@@ -1306,6 +1324,28 @@ function bindReminderEvents(){
       const id = Number(e.currentTarget.dataset.buy);
       const r = reminders.find(x=>x.id===id);
       showToast(`Redirecionando para comprar "${r.name}"...`, 'external-link');
+    });
+  });
+  document.querySelectorAll('[data-editname]').forEach(el=>{
+    el.addEventListener('change', e=>{
+      const id = Number(e.target.dataset.editname);
+      const r = reminders.find(x=>x.id===id);
+      const novoNome = e.target.value.trim();
+      if (!novoNome){ e.target.value = r.name; return; }
+      r.name = novoNome;
+      renderReminders();
+      showToast(`Nome atualizado para "${novoNome}"`, 'refresh-cw');
+    });
+  });
+  document.querySelectorAll('[data-delete]').forEach(el=>{
+    el.addEventListener('click', e=>{
+      const id = Number(e.currentTarget.dataset.delete);
+      const r = reminders.find(x=>x.id===id);
+      if (!r) return;
+      if (!confirm(`Apagar "${r.name}" dos lembretes?`)) return;
+      reminders = reminders.filter(x=>x.id!==id);
+      renderReminders();
+      showToast(`"${r.name}" removido dos lembretes`, 'trash');
     });
   });
 }
