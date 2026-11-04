@@ -42,7 +42,10 @@
   }
 </script>
 <style>
-  html { scroll-behavior: smooth; }
+  html { scroll-behavior: smooth; overflow-x: hidden; max-width: 100vw; }
+  body { overflow-x: hidden; max-width: 100vw; }
+  /* Garante que grids/flex nunca estourem a largura por causa de texto comprido */
+  .grid > *, .flex > * { min-width: 0; }
   body { font-family: 'Inter', sans-serif; background: #FDFBF7; }
   .font-display { font-family: 'Fraunces', serif; }
   ::-webkit-scrollbar { width: 8px; height: 8px; }
@@ -328,18 +331,46 @@
             Novidades por e-mail: <span id="conta-optin-status" class="font-semibold"></span>
           </div>
 
-          <div class="rounded-2xl bg-white shadow-soft px-5 py-4 mb-8">
-            <label class="text-xs font-semibold text-ink/60 mb-2 block">Seu WhatsApp (opcional)</label>
-            <div class="flex gap-2">
-              <input id="conta-whatsapp" type="tel" placeholder="(11) 91234-5678" class="flex-1 border border-rose-100 rounded-xl px-3.5 py-2.5 text-sm focus-ring focus:border-rose-300" />
-              <button id="btn-save-whatsapp" class="shrink-0 text-xs font-semibold bg-ink text-cream px-4 py-2.5 rounded-full hover:bg-ink/85 transition">Salvar</button>
+          <div class="rounded-2xl bg-white shadow-soft px-5 py-4 mb-4">
+            <div id="whatsapp-view" class="hidden items-center justify-between gap-3">
+              <div class="flex items-center gap-2.5 min-w-0">
+                <div class="w-8 h-8 rounded-full bg-sage-100 flex items-center justify-center shrink-0">
+                  <i data-icon="circle-check" class="text-sage-600" style="width:15px;height:15px"></i>
+                </div>
+                <div class="min-w-0">
+                  <p class="text-[11px] text-ink/45">WhatsApp salvo</p>
+                  <p id="whatsapp-view-number" class="text-sm font-semibold truncate"></p>
+                </div>
+              </div>
+              <button id="btn-edit-whatsapp" class="shrink-0 text-xs font-semibold text-rose-600 underline">Editar</button>
             </div>
-            <p class="text-[11px] text-ink/40 mt-2">Uma forma a mais da Casu falar com você, além do e-mail.</p>
+            <div id="whatsapp-edit">
+              <label class="text-xs font-semibold text-ink/60 mb-2 block">Seu WhatsApp (opcional)</label>
+              <div class="flex gap-2">
+                <input id="conta-whatsapp" type="tel" placeholder="(11) 91234-5678" class="flex-1 border border-rose-100 rounded-xl px-3.5 py-2.5 text-sm focus-ring focus:border-rose-300" />
+                <button id="btn-save-whatsapp" class="shrink-0 text-xs font-semibold bg-ink text-cream px-4 py-2.5 rounded-full hover:bg-ink/85 transition">Salvar</button>
+              </div>
+              <p class="text-[11px] text-ink/40 mt-2">Uma forma a mais da Casu falar com você, além do e-mail.</p>
+            </div>
+          </div>
+
+          <div class="rounded-2xl bg-white shadow-soft px-5 py-4 mb-8">
+            <p class="text-xs font-semibold text-ink/60 mb-1">Teve algum problema ou ideia?</p>
+            <p class="text-[11px] text-ink/45 mb-3">Manda um feedback direto pra gente — toda sugestão ajuda a melhorar a Casu.</p>
+            <a id="feedback-link" href="#" class="inline-flex items-center gap-1.5 text-xs font-semibold text-rose-600 underline">
+              <i data-icon="envelope" style="width:13px;height:13px"></i> Enviar feedback
+            </a>
           </div>
 
           <h2 class="font-display text-xl mb-3">Meus pedidos</h2>
           <div id="conta-orders" class="space-y-3"></div>
-          <p id="conta-orders-empty" class="hidden text-sm text-ink/40 py-10 text-center">Você ainda não tem pedidos por aqui.</p>
+          <p id="conta-orders-empty" class="hidden text-sm text-ink/40 py-10 text-center mb-8">Você ainda não tem pedidos por aqui.</p>
+
+          <div class="rounded-2xl border border-rose-100 px-5 py-4">
+            <p class="text-xs font-semibold text-ink/60 mb-1">Zona de risco</p>
+            <p class="text-[11px] text-ink/45 mb-3">Excluir sua conta remove seu acesso e seus dados pessoais, conforme nossa política de privacidade.</p>
+            <button id="btn-delete-account" class="text-xs font-semibold text-rose-600 underline">Excluir minha conta</button>
+          </div>
         </div>
       </section>
 
@@ -409,8 +440,8 @@
   <i data-icon="instagram" class="text-white" style="width:20px;height:20px"></i>
 </a>
 <a id="whatsapp-float" href="#" target="_blank"
-   class="fixed bottom-32 md:bottom-7 right-5 z-[80] w-14 h-14 rounded-full bg-sage-600 shadow-card flex items-center justify-center hover:scale-105 active:scale-95 transition">
-  <i data-icon="comment-dots" class="text-white" style="width:24px;height:24px"></i>
+   class="fixed bottom-32 md:bottom-7 right-5 z-[80] w-12 h-12 rounded-full bg-sage-600 shadow-card flex items-center justify-center hover:scale-105 active:scale-95 transition">
+  <i data-icon="comment-dots" class="text-white" style="width:20px;height:20px"></i>
 </a>
 
 <!-- ============ ARTICLE MODAL ============ -->
@@ -460,20 +491,21 @@
 <!-- ============ TERMOS DE USO E POLÍTICA DE PRIVACIDADE ============ -->
 <div id="terms-modal" class="hidden fixed inset-0 z-[60] flex items-end md:items-center justify-center">
   <div id="terms-modal-backdrop" class="absolute inset-0 bg-ink/40 backdrop-blur-sm"></div>
-  <div class="relative bg-cream w-full md:max-w-lg md:rounded-3xl rounded-t-3xl max-h-[85vh] overflow-y-auto p-6 md:p-8 shadow-card">
-    <button id="terms-modal-close" class="absolute top-5 right-5 w-8 h-8 rounded-full bg-white flex items-center justify-center hover:bg-rose-50">
+  <div class="relative bg-cream w-full md:max-w-lg md:rounded-3xl rounded-t-3xl max-h-[88vh] flex flex-col shadow-card">
+    <button id="terms-modal-close" class="absolute top-5 right-5 w-8 h-8 rounded-full bg-white flex items-center justify-center hover:bg-rose-50 z-10">
       <i data-icon="xmark" style="width:16px;height:16px"></i>
     </button>
-    <h2 class="font-display text-2xl mb-1">Termos de Uso e Política de Privacidade</h2>
-    <p class="text-xs text-ink/40 mb-5">Última atualização: setembro de 2026</p>
-    <div class="text-sm text-ink/75 leading-relaxed space-y-4">
-      <p><strong>1. Quem somos.</strong> A Casu ("nós") oferece um catálogo de produtos e lembretes de reabastecimento para famílias com bebês. Este site é operado a partir do e-mail de contato casuloja@outlook.com.</p>
-      <p><strong>2. Quais dados coletamos.</strong> Ao criar uma conta, coletamos seu e-mail e senha (a senha nunca fica visível para nós, é armazenada de forma criptografada). Opcionalmente, você pode informar nome, WhatsApp, e dados do seu bebê (nome e data de nascimento), usados apenas para personalizar o conteúdo mostrado a você.</p>
-      <p><strong>3. Para que usamos seus dados.</strong> Usamos seu e-mail e WhatsApp exclusivamente para: (a) gerenciar sua conta e pedidos; (b) enviar novidades, dicas e promoções da Casu, caso você tenha marcado a opção de receber esse conteúdo. Você pode desativar o recebimento de novidades a qualquer momento, entrando em contato pelo e-mail acima.</p>
-      <p><strong>4. Não vendemos seus dados.</strong> Seus dados não são vendidos, alugados ou compartilhados com terceiros para fins de marketing. Podemos usar prestadores de serviço (como plataformas de banco de dados e envio de e-mail) apenas para operar o site, sob obrigação de confidencialidade.</p>
-      <p><strong>5. Seus direitos.</strong> Você pode solicitar a qualquer momento a visualização, correção ou exclusão dos seus dados, entrando em contato pelo e-mail casuloja@outlook.com.</p>
-      <p><strong>6. Segurança.</strong> Seus dados são armazenados em infraestrutura com criptografia e controles de acesso, e apenas você tem acesso aos seus próprios dados dentro da sua conta.</p>
-      <p class="text-xs text-ink/40 pt-2">Este resumo pode ser atualizado conforme o site evolui. Dúvidas específicas sobre seus dados podem ser enviadas para casuloja@outlook.com.</p>
+    <div class="p-6 md:p-8 pb-0 shrink-0">
+      <h2 class="font-display text-2xl mb-1 pr-8">Termos e Privacidade</h2>
+      <p class="text-xs text-ink/40 mb-4">Última atualização: 27/10/2026</p>
+      <div class="flex bg-white rounded-full p-1 shadow-soft">
+        <button id="tab-terms-doc" type="button" class="flex-1 text-xs font-semibold py-2 rounded-full transition">Termos de Uso</button>
+        <button id="tab-privacy-doc" type="button" class="flex-1 text-xs font-semibold py-2 rounded-full transition">Privacidade</button>
+      </div>
+    </div>
+    <div class="overflow-y-auto px-6 md:px-8 py-5">
+      <div id="terms-doc-content" class="text-sm text-ink/75 leading-relaxed space-y-4"></div>
+      <div id="privacy-doc-content" class="hidden text-sm text-ink/75 leading-relaxed space-y-4"></div>
     </div>
   </div>
 </div>
@@ -503,6 +535,20 @@
     <div class="flex gap-2 p-6 md:p-8 pt-3 border-t border-rose-100/70 shrink-0">
       <button id="profile-save" class="flex-1 bg-rose-600 text-white rounded-full text-sm font-semibold py-2.5 hover:bg-rose-700 transition">Salvar e continuar</button>
       <button id="profile-skip" class="px-4 rounded-full border border-rose-100 text-sm text-ink/60 hover:bg-rose-50 transition">Pular</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ COOKIE BANNER ============ -->
+<div id="cookie-banner" class="hidden fixed inset-x-0 bottom-0 z-[90] p-3 md:p-5">
+  <div class="max-w-2xl mx-auto bg-ink text-cream rounded-2xl shadow-card p-5 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+    <p class="text-xs text-cream/80 flex-1 leading-relaxed">
+      Usamos cookies essenciais para o site funcionar bem. Você pode aceitar todos ou manter só os necessários.
+      Veja nossos <button id="cookie-terms-link" type="button" class="underline font-semibold">Termos e Política de Privacidade</button>.
+    </p>
+    <div class="flex gap-2 shrink-0 w-full sm:w-auto">
+      <button id="cookie-necessary" type="button" class="flex-1 sm:flex-none text-xs font-semibold border border-cream/30 text-cream px-4 py-2.5 rounded-full hover:bg-white/10 transition">Só necessários</button>
+      <button id="cookie-accept" type="button" class="flex-1 sm:flex-none text-xs font-semibold bg-rose-600 text-white px-4 py-2.5 rounded-full hover:bg-rose-700 transition">Aceitar todos</button>
     </div>
   </div>
 </div>
@@ -789,9 +835,14 @@ const products = [
 ];
 
 const faqs = [
-  { q: 'Como funciona o cálculo do prazo de reabastecimento?', a: 'A gente calcula automaticamente com base na data da sua última compra e no ciclo médio de consumo que você define (15, 30 ou 45 dias). Quando o prazo chega perto, avisamos por aqui.' },
-  { q: 'Posso mudar o ciclo de um produto a qualquer momento?', a: 'Sim! Basta ir até "Lembretes", escolher o item e ajustar o ciclo no seletor do próprio card. A atualização é imediata.' },
-  { q: 'O botão "Reabastecer Agora" me leva pra onde?', a: 'Ele te leva direto para a página de compra do produto na nossa loja, já pronto para finalizar o pedido.' },
+  { q: 'Como funciona o cálculo do prazo de reabastecimento?', a: 'A gente calcula automaticamente com base na data da sua última compra e no ciclo que você define (qualquer quantidade de dias, do jeito que fizer sentido pra sua família). Quando o prazo chega perto, avisamos por aqui.' },
+  { q: 'Posso mudar o ciclo ou o nome de um produto depois de adicionado?', a: 'Sim! Em "Lembretes", cada item tem campos de nome, ciclo e última compra editáveis direto no card. Também dá pra apagar um item tocando no ícone de lixeira.' },
+  { q: 'O botão "Reabastecer Agora" me leva pra onde?', a: 'Ele te leva direto para o anúncio do produto no Mercado Livre. Quando você escolhe um produto da nossa lista suspensa ao adicionar um lembrete, o link já vem certinho, ligado ao anúncio real.' },
+  { q: 'Como crio uma conta e pra que ela serve?', a: 'Na aba "Conta", você cria com e-mail e senha. Com a conta, a gente consegue te avisar sobre pedidos e mandar novidades, se você quiser.' },
+  { q: 'Esqueci minha senha, e agora?', a: 'Na tela de login, toque em "Esqueci minha senha" e informe seu e-mail. Mandamos um link pra você criar uma senha nova.' },
+  { q: 'Posso deixar meu WhatsApp sem criar conta?', a: 'O WhatsApp é salvo junto com a sua conta, então é necessário criar um cadastro primeiro — leva menos de um minuto, e dá pra editar o número depois, a qualquer momento, na aba "Conta".' },
+  { q: 'Como peço pra apagar meus dados?', a: 'Na aba "Conta", role até "Excluir minha conta" — isso abre um e-mail pronto pra gente confirmar e processar o pedido. Você também pode escrever direto para casuloja@outlook.com.' },
+  { q: 'O que são as "Histórias para Dormir"?', a: 'É o ícone de livro no topo do site — uma coleção de histórias curtas e calmas pra ler com o bebê antes de dormir, com música suave opcional tocando junto.' },
   { q: 'Como falo com uma pessoa de verdade?', a: 'É só clicar no botão flutuante do WhatsApp em qualquer tela, ou usar o botão "Abrir conversa" aqui na página de Suporte.' },
 ];
 
@@ -1065,6 +1116,7 @@ async function renderConta(){
   const { data: prof } = await sb.from('profiles').select('marketing_opt_in, whatsapp').eq('id', session.user.id).single();
   document.getElementById('conta-optin-status').textContent = prof?.marketing_opt_in ? 'Ativado' : 'Desativado';
   document.getElementById('conta-whatsapp').value = prof?.whatsapp || '';
+  updateWhatsappSectionView(prof?.whatsapp || '');
 
   const { data: orders } = await sb.from('orders').select('*').eq('user_id', session.user.id).order('created_at', { ascending: false });
   const ordersEl = document.getElementById('conta-orders');
@@ -1087,14 +1139,41 @@ async function renderConta(){
 }
 
 let currentUserId = null;
+
+function updateWhatsappSectionView(value){
+  const hasValue = !!value;
+  const viewEl = document.getElementById('whatsapp-view');
+  const editEl = document.getElementById('whatsapp-edit');
+  viewEl.classList.toggle('hidden', !hasValue);
+  viewEl.classList.toggle('flex', hasValue);
+  editEl.classList.toggle('hidden', hasValue);
+  if (hasValue) document.getElementById('whatsapp-view-number').textContent = value;
+  renderIcons();
+}
+
 async function handleSaveWhatsapp(){
   if (!sb || !currentUserId) return;
   const whatsapp = document.getElementById('conta-whatsapp').value.trim();
   const { error } = await sb.from('profiles').update({ whatsapp }).eq('id', currentUserId);
   if (error){ showToast('Não deu pra salvar agora, tenta de novo', 'circle-exclamation'); return; }
   showToast('WhatsApp salvo!', 'circle-check');
+  updateWhatsappSectionView(whatsapp);
 }
 document.getElementById('btn-save-whatsapp').addEventListener('click', handleSaveWhatsapp);
+document.getElementById('btn-edit-whatsapp').addEventListener('click', ()=>{
+  document.getElementById('whatsapp-view').classList.add('hidden');
+  document.getElementById('whatsapp-view').classList.remove('flex');
+  document.getElementById('whatsapp-edit').classList.remove('hidden');
+});
+
+document.getElementById('btn-delete-account').addEventListener('click', ()=>{
+  const email = document.getElementById('conta-email').textContent || '';
+  if (!confirm('Tem certeza que quer excluir sua conta? Essa ação não pode ser desfeita por você mesma — vamos confirmar e processar o pedido.')) return;
+  const subject = encodeURIComponent('Solicitação de exclusão de conta — Casu');
+  const body = encodeURIComponent(`Olá! Quero solicitar a exclusão da minha conta e dos meus dados da Casu.\n\nE-mail cadastrado: ${email}\n\nObrigada(o)!`);
+  window.location.href = `mailto:casuloja@outlook.com?subject=${subject}&body=${body}`;
+  showToast('Abrindo seu e-mail pra confirmar o pedido de exclusão...', 'envelope');
+});
 
 
 document.getElementById('tab-login').addEventListener('click', ()=> setAuthMode('login'));
@@ -1111,7 +1190,67 @@ document.getElementById('link-forgot').addEventListener('click', ()=>{
 });
 document.getElementById('link-back-to-login').addEventListener('click', ()=> setAuthMode('login'));
 
+/* ==================================================================
+   TERMOS DE USO E POLÍTICA DE PRIVACIDADE — textos completos
+================================================================== */
+const TERMS_SECTIONS = [
+  { h: '1. Identificação e finalidade', b: `<p>O site CASU/CASULOJA, disponível em https://casuapp.netlify.app, é um ambiente digital destinado à apresentação de produtos, divulgação de conteúdos, disponibilização de funcionalidades de relacionamento e direcionamento de usuários para páginas externas de compra.</p><p>E-mail para contato: casuloja@outlook.com<br>WhatsApp: +55 (11) 98804-0037</p>` },
+  { h: '2. Aceitação e alcance dos Termos', b: `<p>Estes Termos estabelecem as condições de utilização do site e de suas funcionalidades.</p><p>Ao acessar o site, o usuário poderá consultar produtos e conteúdos sem que isso, por si só, constitua uma compra ou implique adesão obrigatória a comunicações promocionais.</p><p>Quando houver funcionalidades que exijam cadastro, armazenamento de informações ou outra manifestação específica, serão apresentadas as informações e autorizações pertinentes.</p><p>Estes Termos deverão ser interpretados conforme a legislação brasileira. Nenhuma cláusula representa renúncia a direitos legalmente assegurados ao usuário ou consumidor.</p>` },
+  { h: '3. Natureza do serviço', b: `<p>A CASU/CASULOJA funciona como vitrine digital e canal de relacionamento. O site poderá apresentar:</p><ul class="list-disc pl-5 space-y-1"><li>Produtos e informações comerciais;</li><li>Histórias e outros conteúdos informativos;</li><li>Funcionalidades de lembretes e acompanhamento de produtos;</li><li>Links para anúncios publicados no Mercado Livre;</li><li>Informações sobre novidades e ofertas, conforme as escolhas do usuário.</li></ul><p>O site não possui, no momento desta versão, checkout próprio para finalizar pedidos ou processar pagamentos.</p><p>A disponibilidade de cada funcionalidade dependerá de sua efetiva implementação e poderá ser alterada para manutenção, correção ou melhoria.</p>` },
+  { h: '4. Produtos, ofertas e informações', b: `<p>A CASU/CASULOJA buscará apresentar informações claras e atualizadas sobre os produtos divulgados.</p><p>Preços, estoque, condições de pagamento, frete, prazo de entrega e demais condições da compra deverão ser confirmados na página de destino antes da conclusão do pedido.</p><p>Informações exibidas no site poderão ficar desatualizadas em razão de alterações realizadas na plataforma de venda ou pelo vendedor responsável pelo anúncio. A loja buscará corrigir divergências identificadas, sem que esta disposição autorize a divulgação enganosa ou afaste direitos previstos em lei.</p><p>Imagens ilustrativas, descrições e conteúdos não deverão induzir o usuário a erro quanto às características essenciais do produto.</p>` },
+  { h: '5. Redirecionamento ao Mercado Livre', b: `<p>Os links de produtos poderão direcionar o usuário ao Mercado Livre para consultar o anúncio e, caso deseje, realizar a compra.</p><p>No ambiente externo, o usuário deverá verificar a identificação do vendedor, as condições da oferta, a disponibilidade do produto, o frete, o prazo, o pagamento e as regras aplicáveis à transação.</p><p>As operações realizadas no Mercado Livre estarão sujeitas às condições e aos procedimentos pertinentes daquela plataforma.</p><p>A CASU/CASULOJA não controla sistemas externos, alterações de anúncios ou a disponibilidade de serviços de terceiros. Contudo, o redirecionamento não exclui eventual responsabilidade legal da CASU/CASULOJA por suas próprias informações, publicidade, condutas ou obrigações.</p>` },
+  { h: '6. Funcionalidades de relacionamento', b: `<p>O site poderá oferecer histórias, lembretes de reposição e outros recursos destinados a facilitar a consulta e o acompanhamento de produtos.</p><p>Os lembretes são recursos auxiliares e não constituem garantia de reposição, estoque, preço, desconto ou disponibilidade futura.</p><p>O funcionamento e o armazenamento das informações dessas funcionalidades serão tratados conforme a Política de Privacidade.</p><p>O usuário deverá utilizar os recursos de maneira lícita e não poderá tentar comprometer a segurança, alterar indevidamente o funcionamento ou acessar dados de terceiros sem autorização.</p>` },
+  { h: '7. Comunicações promocionais', b: `<p>O recebimento de ofertas e mensagens promocionais por WhatsApp ou e-mail será opcional e dependerá de autorização específica quando essa for a base legal utilizada.</p><p>A autorização para marketing não será condição para navegar pelo site ou consultar os produtos.</p><p>O usuário poderá cancelar o recebimento a qualquer momento, gratuitamente, pelos mecanismos de descadastramento disponibilizados.</p><p>Mensagens estritamente operacionais, de segurança ou relacionadas a solicitações do próprio usuário poderão ser enviadas quando necessárias e legalmente permitidas, independentemente de sua inscrição em campanhas promocionais.</p>` },
+  { h: '8. Conduta e uso adequado', b: `<p>O usuário deverá fornecer informações verdadeiras quando optar por fornecê-las e utilizar o site de forma lícita.</p><p>Não é permitido utilizar o site para praticar fraudes, distribuir conteúdo ilícito, violar direitos de terceiros, tentar obter acesso não autorizado a sistemas ou prejudicar a segurança e a disponibilidade dos serviços.</p><p>A adoção de medidas diante de abuso ou uso indevido deverá ser proporcional à situação e respeitar os direitos legalmente aplicáveis.</p>` },
+  { h: '9. Disponibilidade e manutenção', b: `<p>A CASU/CASULOJA buscará manter o site funcional, mas não garante disponibilidade ininterrupta, ausência absoluta de falhas ou funcionamento permanente de links externos.</p><p>Poderão ocorrer interrupções para manutenção, atualizações, correções técnicas ou em razão de eventos fora do controle operacional do site.</p><p>Esta cláusula não exclui responsabilidades decorrentes de falhas pelas quais o responsável deva responder legalmente.</p>` },
+  { h: '10. Conteúdos e propriedade intelectual', b: `<p>Os elementos próprios do site, incluindo textos, identidade visual, logotipos, ilustrações e materiais originais, poderão ser protegidos pela legislação de propriedade intelectual.</p><p>Não é permitida sua reprodução ou utilização comercial sem autorização do titular, salvo nas hipóteses permitidas por lei.</p><p>Marcas, anúncios, imagens e conteúdos pertencentes a terceiros permanecem sujeitos aos direitos de seus respectivos titulares.</p>` },
+  { h: '11. Privacidade e proteção de dados', b: `<p>O tratamento de dados pessoais será realizado conforme a Política de Privacidade da CASU/CASULOJA e a legislação aplicável, especialmente a Lei Geral de Proteção de Dados Pessoais (LGPD).</p><p>A Política de Privacidade informa as finalidades do tratamento, os tipos de dados envolvidos, o compartilhamento, a conservação e os meios de exercício dos direitos dos titulares.</p>` },
+  { h: '12. Alterações dos Termos', b: `<p>Estes Termos poderão ser atualizados para refletir mudanças nas funcionalidades, na operação ou na legislação.</p><p>A versão vigente será disponibilizada no site com sua data de atualização. Alterações relevantes serão comunicadas quando necessário.</p><p>As atualizações não poderão retirar retroativamente direitos legalmente assegurados.</p>` },
+  { h: '13. Atendimento e solução de controvérsias', b: `<p>Dúvidas, reclamações e solicitações poderão ser encaminhadas por casuloja@outlook.com ou +55 (11) 98804-0037.</p><p>A CASU/CASULOJA buscará tratar as solicitações de maneira clara e adequada. A tentativa de solução direta não impede o usuário de recorrer aos órgãos competentes ou ao Poder Judiciário.</p>` },
+  { h: '14. Legislação aplicável', b: `<p>Estes Termos serão interpretados de acordo com a legislação brasileira, incluindo, conforme aplicável, o Código de Defesa do Consumidor, as normas de comércio eletrônico e a Lei Geral de Proteção de Dados Pessoais.</p><p>Canal de contato: casuloja@outlook.com ou +55 (11) 98804-0037.<br>Data de publicação: 27/10/2026</p>` },
+];
+
+const PRIVACY_SECTIONS = [
+  { h: '1. Apresentação', b: `<p>Esta Política de Privacidade explica como a CASU/CASULOJA trata dados pessoais durante a utilização do site https://casuapp.netlify.app e de suas funcionalidades.</p><p>O site funciona como vitrine digital e canal de relacionamento, com apresentação de produtos, conteúdos, lembretes e links para anúncios do Mercado Livre.</p><p>O responsável pelo tratamento deverá ser identificado pelos seguintes dados:</p><ul class="list-disc pl-5 space-y-1"><li>Contato sobre privacidade: casuloja@outlook.com</li><li>Canal alternativo: +55 (11) 98804-0037</li></ul><p>O responsável atuará como controlador dos dados pessoais nas operações em que determinar suas finalidades e seus meios essenciais, conforme a legislação aplicável.</p>` },
+  { h: '2. Quais dados podem ser tratados', b: `<p>Os dados efetivamente tratados dependerão das funcionalidades utilizadas e dos recursos técnicos implementados. Poderão incluir:</p><ul class="list-disc pl-5 space-y-1"><li><strong>Dados de contato e preferências:</strong> nome, endereço de e-mail, número de WhatsApp e preferências de comunicação, quando fornecidos pelo usuário.</li><li><strong>Dados de marketing:</strong> escolha dos canais promocionais, data e origem da autorização, registro de sua revogação e informações necessárias para impedir novos envios após o descadastramento.</li><li><strong>Dados de funcionalidades:</strong> informações sobre produtos acompanhados, lembretes de reposição ou preferências salvas, quando vinculadas a uma pessoa identificada ou identificável.</li><li><strong>Dados técnicos:</strong> registros de acesso, endereço IP, informações do navegador, dispositivo, data e horário de utilização, cookies e outros identificadores, quando efetivamente coletados pelo site ou por seus fornecedores.</li><li><strong>Comunicações:</strong> conteúdo de mensagens enviadas voluntariamente ao atendimento, quando houver esse recurso.</li></ul><p>A CASU/CASULOJA não deverá coletar dados desnecessários para as finalidades oferecidas. Dados não coletados ou funcionalidades não implementadas não são presumidos como existentes por esta Política.</p>` },
+  { h: '3. Finalidades e bases legais', b: `<p>Os dados poderão ser tratados para finalidades específicas, conforme a atividade realizada e a base legal aplicável:</p><ul class="list-disc pl-5 space-y-1"><li><strong>Atendimento e relacionamento:</strong> responder a solicitações e executar funcionalidades pedidas pelo usuário, quando aplicável.</li><li><strong>Lembretes e preferências:</strong> armazenar e disponibilizar informações necessárias à funcionalidade escolhida, conforme sua configuração.</li><li><strong>Marketing:</strong> enviar ofertas, novidades e conteúdos promocionais pelos canais autorizados, com base no consentimento ou em outra hipótese legal válida devidamente avaliada.</li><li><strong>Segurança:</strong> proteger o site, investigar abusos e prevenir acessos indevidos, conforme a base legal adequada.</li><li><strong>Obrigações legais e exercício de direitos:</strong> conservar ou utilizar registros quando necessário para cumprir obrigações ou defender direitos.</li><li><strong>Funcionamento técnico:</strong> manter a infraestrutura e corrigir erros, utilizando somente os dados necessários para essas finalidades.</li></ul><p>A base legal será determinada conforme cada operação. A inclusão de uma finalidade nesta Política não autoriza, por si só, qualquer tratamento de dados sem fundamento jurídico válido.</p>` },
+  { h: '4. Ofertas e marketing por WhatsApp e e-mail', b: `<p>O usuário poderá escolher se deseja receber ofertas e comunicações promocionais da CASU/CASULOJA por WhatsApp, por e-mail ou por ambos os canais, quando disponibilizados.</p><p>A autorização será específica, facultativa, informada e separada das condições necessárias ao uso básico do site.</p><p>A CASU/CASULOJA não deverá considerar a simples visita ao site, o clique em um produto ou o acesso a um anúncio como autorização automática para campanhas promocionais.</p><p>Quando o consentimento for utilizado como base legal, a loja registrará informações suficientes para demonstrar a autorização, incluindo, conforme aplicável, o canal escolhido, a data, a origem e a versão do texto apresentado.</p><p><strong>Como cancelar as mensagens</strong></p><p>O usuário poderá retirar sua autorização a qualquer momento, gratuitamente, por meio de qualquer uma das seguintes opções disponibilizadas:</p><ul class="list-disc pl-5 space-y-1"><li><strong>WhatsApp:</strong> responder "SAIR" à mensagem promocional ou utilizar o mecanismo de cancelamento informado na própria mensagem.</li><li><strong>E-mail:</strong> utilizar o link de descadastramento incluído na mensagem ou responder solicitando a interrupção dos envios.</li><li><strong>Atendimento:</strong> solicitar o cancelamento pelo canal casuloja@outlook.com.</li></ul><p>O descadastramento será processado sem demora indevida. A loja poderá manter o registro mínimo necessário para respeitar a escolha do usuário e impedir novos envios promocionais, sem continuar utilizando seus dados para campanhas.</p><p>O cancelamento de marketing não deverá impedir o uso normal do site. Comunicações não promocionais solicitadas pelo usuário ou necessárias para atender obrigações legítimas poderão continuar quando houver fundamento legal adequado.</p>` },
+  { h: '5. Armazenamento em serviços online', b: `<p>Algumas informações poderão ser armazenadas em banco de dados ou infraestrutura online para viabilizar funcionalidades do site.</p><p>Os fornecedores, a localização dos servidores, os mecanismos de acesso e os prazos de retenção deverão ser confirmados e descritos de acordo com a infraestrutura realmente utilizada.</p><p>O acesso aos dados deverá ser limitado às pessoas e aos serviços que necessitem dessas informações para finalidades legítimas.</p><p>A CASU/CASULOJA buscará utilizar medidas de segurança compatíveis com os riscos, incluindo controles de acesso, proteção de credenciais, atualização de sistemas e procedimentos de recuperação quando aplicáveis.</p><p>O armazenamento online não significa que os dados sejam públicos. Também não significa que possam ser compartilhados livremente com terceiros.</p>` },
+  { h: '6. Compartilhamento com terceiros', b: `<p>O compartilhamento poderá ocorrer com fornecedores de hospedagem, banco de dados, infraestrutura, envio de e-mails, comunicação por WhatsApp ou outros serviços que venham a ser efetivamente utilizados, na medida necessária às finalidades informadas.</p><p>Os fornecedores e seus respectivos papéis deverão ser identificados internamente antes da publicação desta Política e descritos de forma adequada quando necessário.</p><p>O site também contém links para o Mercado Livre. Ao clicar nesses links, o usuário poderá acessar serviços controlados por terceiros, que poderão tratar dados conforme suas próprias políticas e condições.</p><p>A simples existência de um link não significa que a CASU/CASULOJA receba automaticamente os dados do usuário ou tenha acesso ao seu histórico de navegação na plataforma externa.</p><p>A CASU/CASULOJA não comercializa dados pessoais como produto. Qualquer compartilhamento deverá ter finalidade legítima e fundamento jurídico apropriado.</p>` },
+  { h: '7. Links externos e anúncios', b: `<p>Os anúncios acessados pelo site poderão ser modificados, removidos ou ficar indisponíveis pelos respectivos responsáveis.</p><p>Ao acessar o Mercado Livre, o usuário deverá consultar as políticas de privacidade e os termos aplicáveis à plataforma, bem como as informações do vendedor e do anúncio antes de concluir uma compra.</p><p>A Política de Privacidade da CASU/CASULOJA abrange o tratamento realizado sob sua responsabilidade, não substituindo as políticas dos serviços externos.</p>` },
+  { h: '8. Cookies e dados de navegação', b: `<p>O site poderá utilizar cookies ou tecnologias semelhantes, dependendo de sua implementação e dos serviços integrados.</p><p>Antes da publicação, deverão ser identificados os cookies e mecanismos efetivamente utilizados, suas finalidades, seus fornecedores e os períodos de conservação pertinentes.</p><p>Quando forem utilizados cookies não essenciais sujeitos a consentimento, deverá ser disponibilizada uma escolha adequada, sem presumir autorização pela simples navegação.</p><p>Cookies estritamente necessários ao funcionamento e à segurança poderão ser tratados conforme a base legal aplicável. A utilização de ferramentas de análise ou publicidade deverá ser avaliada de acordo com suas características concretas.</p>` },
+  { h: '9. Conservação e exclusão dos dados', b: `<p>Os dados serão conservados pelo tempo necessário às finalidades que justificaram sua coleta, respeitando a minimização e os prazos legais aplicáveis.</p><p>Os prazos específicos deverão ser definidos conforme a categoria de dado, a funcionalidade e a necessidade de conservação.</p><p>Quando os dados deixarem de ser necessários, serão eliminados ou anonimizados, quando possível, ressalvadas as hipóteses legais de conservação.</p><p>O pedido de exclusão será analisado conforme a legislação. A revogação do consentimento não exige a eliminação de todo e qualquer registro quando houver fundamento legal independente para conservação, mas não autoriza a continuidade de campanhas baseadas no consentimento revogado.</p>` },
+  { h: '10. Segurança e incidentes', b: `<p>A CASU/CASULOJA adotará medidas técnicas e administrativas razoáveis e proporcionais para proteger os dados pessoais contra acesso não autorizado, perda, destruição, alteração ou divulgação indevida.</p><p>A segurança depende também da configuração da infraestrutura e dos fornecedores utilizados. Por isso, o responsável deverá manter controles compatíveis com a operação efetiva, evitando promessas de segurança absoluta.</p><p>Se ocorrer incidente que possa acarretar risco ou dano relevante aos titulares, serão avaliadas e adotadas as providências de contenção, documentação e comunicação previstas na legislação e na regulamentação aplicáveis.</p>` },
+  { h: '11. Direitos dos titulares', b: `<p>Nos termos da LGPD, o titular poderá solicitar, conforme aplicável:</p><ul class="list-disc pl-5 space-y-1"><li>Confirmação da existência de tratamento e acesso aos dados.</li><li>Correção de dados incompletos, inexatos ou desatualizados.</li><li>Anonimização, bloqueio ou eliminação nas hipóteses previstas em lei.</li><li>Informação sobre compartilhamentos com entidades públicas e privadas.</li><li>Portabilidade, quando aplicável e observadas as regras pertinentes.</li><li>Eliminação dos dados tratados com consentimento, ressalvadas as hipóteses legais de conservação.</li><li>Informação sobre a possibilidade de não fornecer consentimento e suas consequências.</li><li>Revogação do consentimento.</li><li>Oposição a tratamentos em desconformidade com a legislação.</li><li>Revisão de decisões tomadas unicamente por tratamento automatizado, nos termos legais.</li></ul><p>As solicitações poderão ser enviadas para casuloja@outlook.com.</p><p>Poderão ser solicitadas informações estritamente necessárias à confirmação da identidade do requerente, de forma proporcional, para proteger os dados contra divulgação indevida.</p><p>As respostas serão fornecidas nos prazos e condições previstos na legislação. Quando uma solicitação não puder ser atendida integralmente, o responsável deverá informar os motivos e os limites legais aplicáveis.</p>` },
+  { h: '12. Crianças e adolescentes', b: `<p>O site deverá observar as regras aplicáveis ao tratamento de dados pessoais de crianças e adolescentes, considerando seu melhor interesse e as exigências legais pertinentes.</p><p>A implementação de cadastros ou campanhas destinados a esse público deverá ser avaliada previamente, especialmente quanto à base legal, às informações fornecidas e às autorizações eventualmente exigidas.</p>` },
+  { h: '13. Transferências internacionais', b: `<p>Se os serviços utilizados armazenarem ou processarem dados fora do Brasil, o responsável deverá verificar os países envolvidos e o mecanismo jurídico aplicável à transferência internacional.</p><p>As transferências somente serão realizadas conforme os requisitos legais e regulamentares pertinentes.</p><p>Fornecedores e países envolvidos: Brasil.</p>` },
+  { h: '14. Alterações desta Política', b: `<p>Esta Política poderá ser atualizada em caso de mudanças nas funcionalidades, nos fornecedores, nas finalidades do tratamento ou na legislação.</p><p>A versão vigente ficará disponível no site com sua data de atualização. Alterações relevantes serão comunicadas quando exigido ou necessário para assegurar transparência.</p><p>Quando uma nova finalidade depender de consentimento, a publicação de uma versão atualizada não substituirá a obtenção da autorização necessária.</p>` },
+  { h: '15. Contato sobre privacidade', b: `<p>Para dúvidas, solicitações ou exercício de direitos:</p><p>Responsável pelo tratamento<br>E-mail: casuloja@outlook.com<br>Canal alternativo: +55 (11) 98804-0037</p><p>O responsável avaliará as solicitações conforme a LGPD e as regras aplicáveis da Autoridade Nacional de Proteção de Dados (ANPD).</p><p>Esta Política deverá ser interpretada conforme a legislação brasileira, sem limitar os direitos dos titulares.</p><p class="text-xs text-ink/40 pt-2">Última atualização: 27/10/2026</p>` },
+];
+
+function renderLegalDoc(containerId, sections){
+  document.getElementById(containerId).innerHTML = sections.map(s => `
+    <div>
+      <p class="font-semibold text-ink mb-1.5">${s.h}</p>
+      ${s.b}
+    </div>
+  `).join('');
+}
+renderLegalDoc('terms-doc-content', TERMS_SECTIONS);
+renderLegalDoc('privacy-doc-content', PRIVACY_SECTIONS);
+
+function setLegalTab(tab){
+  const isTerms = tab === 'terms';
+  document.getElementById('terms-doc-content').classList.toggle('hidden', !isTerms);
+  document.getElementById('privacy-doc-content').classList.toggle('hidden', isTerms);
+  document.getElementById('tab-terms-doc').className = `flex-1 text-xs font-semibold py-2 rounded-full transition ${isTerms ? 'bg-ink text-cream' : 'text-ink/50'}`;
+  document.getElementById('tab-privacy-doc').className = `flex-1 text-xs font-semibold py-2 rounded-full transition ${!isTerms ? 'bg-ink text-cream' : 'text-ink/50'}`;
+}
+document.getElementById('tab-terms-doc').addEventListener('click', ()=> setLegalTab('terms'));
+document.getElementById('tab-privacy-doc').addEventListener('click', ()=> setLegalTab('privacy'));
+
 document.getElementById('open-terms').addEventListener('click', ()=>{
+  setLegalTab('terms');
   document.getElementById('terms-modal').classList.remove('hidden');
 });
 document.getElementById('terms-modal-close').addEventListener('click', ()=>{
@@ -1672,11 +1811,32 @@ function renderFaq(){
 /* ==================================================================
    INIT
 ================================================================== */
+/* ==================================================================
+   BANNER DE COOKIES — aparece até a pessoa escolher uma opção
+================================================================== */
+const COOKIE_KEY = 'casu_cookie_consent_v1';
+function initCookieBanner(){
+  try {
+    const saved = localStorage.getItem(COOKIE_KEY);
+    if (!saved) document.getElementById('cookie-banner').classList.remove('hidden');
+  } catch(e){ /* se localStorage falhar, só não mostra o banner */ }
+}
+function setCookieConsent(value){
+  try { localStorage.setItem(COOKIE_KEY, value); } catch(e){}
+  document.getElementById('cookie-banner').classList.add('hidden');
+}
+document.getElementById('cookie-accept').addEventListener('click', ()=> setCookieConsent('all'));
+document.getElementById('cookie-necessary').addEventListener('click', ()=> setCookieConsent('necessary'));
+document.getElementById('cookie-terms-link').addEventListener('click', ()=>{
+  document.getElementById('terms-modal').classList.remove('hidden');
+});
+
 function init(){
   document.getElementById('whatsapp-float').href = waLink;
   document.getElementById('support-whatsapp-link').href = waLink;
   document.getElementById('instagram-float').href = instagramLink;
   document.getElementById('support-instagram-link').href = instagramLink;
+  document.getElementById('feedback-link').href = `mailto:casuloja@outlook.com?subject=${encodeURIComponent('Feedback sobre o site Casu')}`;
 
   applyProfile();
   renderNav();
@@ -1689,10 +1849,10 @@ function init(){
   renderFaq();
   renderIcons();
 
+  initCookieBanner();
   if (!profile) openProfileModal();
 }
 init();
 </script>
 </body>
-</html>
 </html>
